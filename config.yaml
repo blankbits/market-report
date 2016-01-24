@@ -1,0 +1,35 @@
+historical_data_config:
+  symbols_file: 'symbols.csv'
+  output_dir: '20160122/'
+  start_date: '20150701'
+  end_date: '20160122'
+  
+tor_scraper_config:
+  thread_count: 1
+  socks_port_offset: 9250
+  control_port_offset: 9350
+  data_directory: 'tor_data/'
+  tor_cmd: '/Applications/TorBrowser.app/TorBrowser/Tor/tor.real'
+  public_ip_url: 'https://api.ipify.org'
+
+# Passed through to logging.config.dictConfig(config)
+logging_config:
+  version: 1
+  formatters:
+    simple:
+      format: '%(asctime)s %(levelname)-8s %(name)s - %(message)s'
+  handlers:
+    console:
+      class: logging.StreamHandler
+      level: DEBUG
+      formatter: simple
+      stream: ext://sys.stdout
+    file:
+      class: logging.FileHandler
+      level: DEBUG
+      formatter: simple
+      filename: 'log.txt'
+      mode: 'w'
+  root:
+    level: DEBUG
+    handlers: [console, file]
