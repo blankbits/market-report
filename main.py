@@ -48,7 +48,7 @@ def main():
         logger.error('No daily dataframe')
         return
 
-    universe = universe_report.UniverseReport(daily).to_string()
+    universe = universe_report.UniverseReport(daily).get_default_report()
     print universe
 
 # If in top-level script environment, run main().

@@ -8,7 +8,7 @@ class UniverseReport(object):
     def __init__(self, daily):
         self._daily = daily
 
-    def _get_returns_report(self, offset, bins=None):
+    def get_returns_report(self, offset, bins=None):
         returns = ((self._daily['price'].iloc[0, :] - (
             self._daily['price'].iloc[offset, :])) / (
                 self._daily['price'].iloc[offset, :]).sort_values())
@@ -39,7 +39,7 @@ class UniverseReport(object):
 
         return text_utils.join_lines([returns_col, returns_hist], '    ')
 
-    def _get_stats_report(self, offset, count):
+    def get_stats_report(self, offset, count):
         price_at_high = 'At High\n' + text_utils.get_column(
             self._daily['price'].ix[0, self._daily['price'].max(axis=0) == (
                 self._daily['price'].iloc[0, :])], 2)
@@ -61,11 +61,11 @@ class UniverseReport(object):
         return text_utils.join_lines([price_at_high, price_at_low, (
             volatility_change), volume_change], '    ')
 
-    def to_string(self):
+    def get_default_report(self):
         result = '1 Day Returns\n-------------\n'
-        result += self._get_returns_report(1, np.arange(-.2, .22, .02))
+        result += self.get_returns_report(1, np.arange(-.2, .22, .02))
         result += '20 Day Returns\n--------------\n'
-        result += self._get_returns_report(20, np.arange(-.5, .55, .05))
+        result += self.get_returns_report(20, np.arange(-.5, .55, .05))
         result += '20 Day Stats\n------------\n'
-        result += self._get_stats_report(20, 10)
+        result += self.get_stats_report(20, 10)
         return result
