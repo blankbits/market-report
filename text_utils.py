@@ -37,9 +37,10 @@ def get_histogram(series, bins, bins_decimals=0, bins_is_percent=False,
     # Find the max string length for an individual bin value so that right
     # alignment works properly.
     max_bin_value_len = len(str(int(np.round(max(abs(bins)))))) + (
-        (bins_decimals + 1) if bins_decimals > 0 else 0) + 1
+        (bins_decimals + 1) if bins_decimals > 0 else 0) + (
+            1 if min(bins) < 0 else 0)
 
-    format_str = '  '.join(['%+' + str(max_bin_value_len) + '.' + str(
+    format_str = '  '.join(['%' + str(max_bin_value_len) + '.' + str(
         bins_decimals) + ('f%%'if bins_is_percent else 'f')] * 2) + (
             '  %-' + str(len(str(buckets.max()))) + 'i  %s\n')
     for i in range(buckets.size):
@@ -65,7 +66,7 @@ def get_column(series, decimals=1, is_percent=False):
     value_len = len(str(max([str(x) for x in np.round(
         list(abs(series.values)), decimals)], key=len))) + 1
 
-    format_str = ('%-' + str(label_len) + 's  %+' + str(value_len) + '.' +
+    format_str = ('%-' + str(label_len) + 's  %' + str(value_len) + '.' +
                   str(decimals) + 'f' + ('%%\n' if is_percent else '\n'))
     for key, value in series.iteritems():
         column += format_str % (key, value)

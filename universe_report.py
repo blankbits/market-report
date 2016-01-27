@@ -55,7 +55,7 @@ class UniverseReport(object):
         """
         returns = ((self._daily['price'].iloc[0, :] - (
             self._daily['price'].iloc[offset, :])) / (
-                self._daily['price'].iloc[offset, :]).sort_values())
+                self._daily['price'].iloc[offset, :])).sort_values()
 
         # If no bins provided, create default of 20 equally spaced bins.
         if bins is None:

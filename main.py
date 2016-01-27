@@ -43,15 +43,14 @@ def send_email(user, pwd, recipients, subject, body):
     # Force CRLF line endings per SMTP spec.
     plain_body = re.sub('\r?\n', '\r\n', body)
 
-    # Insert line break tags, non-breaking-spaces, and surrounding tags.
     html_body = re.sub('\r?\n', '<br>', body)
     html_body = html_body.replace(' ', '&nbsp;')
     html_body = '<div dir="ltr"><font face="monospace, monospace">' + (
         html_body + '</font></div>')
 
     # Record the MIME types of both parts - text/plain and text/html.
-    part1 = email.mime.text.MIMEText(plain_body, 'plain', _charset='UTF-8')
-    part2 = email.mime.text.MIMEText(html_body, 'html', _charset='UTF-8')
+    part1 = email.mime.text.MIMEText(plain_body, 'plain', _charset='utf-8')
+    part2 = email.mime.text.MIMEText(html_body, 'html', _charset='utf-8')
 
     # Attach parts into message container.
     # According to RFC 2046, the last part of a multipart message, in this case
@@ -107,8 +106,8 @@ def main():
     universe = universe_report.UniverseReport(daily).get_default_report()
     print universe
 
-    send_email('admin@blankbits.com', 'Bl@nkB!ts', ['peterbrandt84@gmail.com'],
-               'Russell 3000 Report -- 1000-20-30', universe)
+    send_email('admin@blankbits.com', '', ['peterbrandt84@gmail.com'],
+               'Russell 3000 Report -- 1234-56-78', universe)
 
 # If in top-level script environment, run main().
 if __name__ == '__main__':
