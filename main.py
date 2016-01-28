@@ -20,52 +20,15 @@
 TODO: Usage!
 """
 
-import email.mime.multipart
-import email.mime.text
 import logging
 import logging.config
-import re
-import smtplib
 import sys
 
 import yaml
 
+import emailer
 import historical_data
 import universe_report
-
-def send_email(user, pwd, recipients, subject, body):
-    # Create message container - the correct MIME type is multipart/alternative.
-    msg = email.mime.multipart.MIMEMultipart('alternative')
-    msg['Subject'] = subject
-    msg['From'] = user
-    msg['To'] = ', '.join(recipients)
-
-    # Force CRLF line endings per SMTP spec.
-    plain_body = re.sub('\r?\n', '\r\n', body)
-
-    html_body = re.sub('\r?\n', '<br>', body)
-    html_body = html_body.replace(' ', '&nbsp;')
-    html_body = '<div dir="ltr"><font face="monospace, monospace">' + (
-        html_body + '</font></div>')
-
-    # Record the MIME types of both parts - text/plain and text/html.
-    part1 = email.mime.text.MIMEText(plain_body, 'plain', _charset='utf-8')
-    part2 = email.mime.text.MIMEText(html_body, 'html', _charset='utf-8')
-
-    # Attach parts into message container.
-    # According to RFC 2046, the last part of a multipart message, in this case
-    # the HTML message, is best and preferred.
-    msg.attach(part1)
-    msg.attach(part2)
-
-    try:
-        server_ssl = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-        server_ssl.login(user, pwd)
-        server_ssl.sendmail(user, recipients, msg.as_string())
-        server_ssl.close()
-        print 'Successfully sent the email'
-    except:
-        print 'Failed to send the email: ', sys.exc_info()[0]
 
 def usage():
     """Print Unix-style usage string.
@@ -106,8 +69,8 @@ def main():
     universe = universe_report.UniverseReport(daily).get_default_report()
     print universe
 
-    send_email('admin@blankbits.com', '', ['peterbrandt84@gmail.com'],
-               'Russell 3000 Report -- 1234-56-78', universe)
+    sender = emailer.Emailer(config['emailer_config'])
+    sender.send('Russell 3000 Report -- 4444-55-22', universe)
 
 # If in top-level script environment, run main().
 if __name__ == '__main__':

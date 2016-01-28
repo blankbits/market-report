@@ -1,3 +1,10 @@
+emailer_config:
+  host: 'smtp.gmail.com'
+  port: 465
+  username: ''
+  password: ''
+  recipients: ['']
+  
 historical_data_config:
   symbols_file: 'symbols.csv'
   output_dir: '20160122/'
