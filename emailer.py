@@ -113,4 +113,5 @@ class Emailer(object):
             server.close()
             self._logger.info('Successfully sent the email')
         except smtplib.SMTPException:
-            self._logger.error('Failed to send the email: ' + str(sys.exc_info()[0]))
+            self._logger.error('Failed to send the email: ' + str(
+                sys.exc_info()[0]))
