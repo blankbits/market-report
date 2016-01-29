@@ -56,7 +56,7 @@ class Emailer(object):
 
         Args:
             from_address: Email address of the sender.
-            to_addresses: Comma-separated list of recipients.
+            to_addresses: Comma-separated email addresses of recipients.
             subject: Subject line of the email.
             body: Body of the email.
         """
@@ -80,9 +80,9 @@ class Emailer(object):
         html_part = email.mime.text.MIMEText(html_body, 'html',
                                              _charset='utf-8')
 
-        # Attach parts into message container.
-        # According to RFC 2046, the last part of a multipart message, in this
-        # case the HTML message, is best and preferred.
+        # Attach parts into message container. According to RFC 2046, the last
+        # part of a multipart message, in this case the HTML message, is best
+        # and preferred.
         message.attach(plain_part)
         message.attach(html_part)
 
