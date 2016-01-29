@@ -33,20 +33,22 @@ def get_histogram(series, bins, bins_decimals=0, bins_is_percent=False,
     """
     histogram = ''
     buckets = series.groupby(pd.cut(series, bins)).count()
+    scaled_bins = 100 * bins if bins_is_percent else bins
 
     # Find the max string length for an individual bin value so that right
     # alignment works properly.
-    max_bin_value_len = len(str(int(np.round(max(abs(bins)))))) + (
+    max_bin_value_len = len(str(int(np.round(max(abs(scaled_bins)))))) + (
         (bins_decimals + 1) if bins_decimals > 0 else 0) + (
-            1 if min(bins) < 0 else 0)
+            1 if min(scaled_bins) < 0 else 0)
 
     format_str = '  '.join(['%' + str(max_bin_value_len) + '.' + str(
         bins_decimals) + ('f%%'if bins_is_percent else 'f')] * 2) + (
             '  %-' + str(len(str(buckets.max()))) + 'i  %s\n')
     for i in range(buckets.size):
         # Due to rounding exact number of blocks may vary.
-        histogram += format_str % (bins[i], bins[i + 1], buckets[i], ''.join(
-            [u'\u2588'] * np.round(block_count * buckets[i] / series.size)))
+        histogram += format_str % (scaled_bins[i], (
+            scaled_bins[i + 1]), buckets[i], ''.join(
+                [u'\u2588'] * np.round(block_count * buckets[i] / series.size)))
     return histogram
 
 def get_column(series, decimals=1, is_percent=False):
@@ -62,13 +64,14 @@ def get_column(series, decimals=1, is_percent=False):
 
     # Find max string length for labels and values so that right alignment works
     # properly.
-    label_len = len(max(list(series.axes[0]), key=len))
+    scaled_series = 100 * series if is_percent else series
+    label_len = len(max(list(scaled_series.axes[0]), key=len))
     value_len = len(str(max([str(x) for x in np.round(
-        list(abs(series.values)), decimals)], key=len))) + 1
+        list(abs(scaled_series.values)), decimals)], key=len))) + 1
 
     format_str = ('%-' + str(label_len) + 's  %' + str(value_len) + '.' +
                   str(decimals) + 'f' + ('%%\n' if is_percent else '\n'))
-    for key, value in series.iteritems():
+    for key, value in scaled_series.iteritems():
         column += format_str % (key, value)
     return column
 

@@ -70,19 +70,18 @@ class UniverseReport(object):
             if returns.max() > bins.max():
                 bins = np.append(bins, returns.max() + sys.float_info.epsilon)
 
-        returns_hist = text_utils.get_histogram(100 * returns, 100 * bins, 0, (
-            True))
+        returns_hist = text_utils.get_histogram(returns, bins, 0, True)
 
         # If there is space for winners and losers and at least one empty line
         # separating them, then include them.
         extreme_count = int(np.floor((bins.size - 1) * .5)) - 1
         if extreme_count > 0:
-            returns_col = text_utils.get_column(100 * returns[:extreme_count], (
-                1), True)
+            returns_col = text_utils.get_column(returns[:extreme_count], 1, (
+                True))
             returns_col += ''.join('\n' * (bins.size - 2 * extreme_count - (
                 1)))
-            returns_col += text_utils.get_column(100 * (
-                returns[-extreme_count:]), 1, True)
+            returns_col += text_utils.get_column(returns[-extreme_count:], 1, (
+                True))
         else:
             returns_col = ''
 
@@ -110,16 +109,15 @@ class UniverseReport(object):
             offset / 2 + 1), :].std(axis=0) / (self._daily['price'].iloc[range(
                 (offset / 2), offset + 1), :].std(axis=0))
         volatility_change = 'Volatility Chg\n' + text_utils.get_column(
-            100 * volatility_change.sort_values(ascending=False)[range(
-                count)], 2, True)
+            volatility_change.sort_values(ascending=False)[range(count)], 2, (
+                True))
 
         # Percent change in volume from the first to second half of the period.
         volume_change = self._daily['volume'].iloc[range(
             offset / 2 + 1), :].sum(axis=0) / (self._daily['volume'].iloc[range(
                 (offset / 2), offset + 1), :].sum(axis=0))
         volume_change = 'Volume Chg\n' + text_utils.get_column(
-            100 * volume_change.sort_values(
-                ascending=False)[range(count)], 2, True)
+            volume_change.sort_values(ascending=False)[range(count)], 2, True)
 
         return text_utils.join_lines([price_at_high, price_at_low, (
             volatility_change), volume_change], '    ')

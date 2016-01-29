@@ -70,7 +70,8 @@ def main():
     print universe
 
     sender = emailer.Emailer(config['emailer_config'])
-    sender.send('Russell 3000 Report -- 4444-55-22', universe)
+    sender.send('Russell 3000 Report -- ' + (
+        config['historical_data_config']['end_date']), universe)
 
 # If in top-level script environment, run main().
 if __name__ == '__main__':
