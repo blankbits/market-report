@@ -26,7 +26,6 @@ Example:
     })
     sender.send('Hello', 'World', ['somebody@domain.com'])
 )
-    sender('Russell 3000 Report -- 4444-55-22', universe)
 """
 
 import email.mime.multipart
