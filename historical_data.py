@@ -111,6 +111,7 @@ class HistoricalData(object):
         # Create dataframes for price and volume.
         self._logger.info('Creating dataframes')
         is_valid = True
+        drop_columns = []
         daily = {}
         price = {}
         volume = {}
@@ -137,27 +138,35 @@ class HistoricalData(object):
         if np.any(daily['price'].isnull()):
             columns = daily['price'].columns[
                 daily['price'].isnull().any(axis=0)].values
+            drop_columns.extend(columns)
             self._logger.error('Price data contains nulls: ' +
                                ', '.join(columns))
             is_valid = False
         if np.any(daily['volume'].isnull()):
             columns = daily['volume'].columns[
                 daily['volume'].isnull().any(axis=0)].values
+            drop_columns.extend(columns)
             self._logger.error('Volume data contains nulls: ' +
                                ', '.join(columns))
             is_valid = False
         if np.any(daily['volume'] == 0):
             columns = daily['volume'].columns[
                 (daily['volume'] == 0).any(axis=0)].values
-            self._logger.warning('Volume data contains zeros: ' +
-                                 ', '.join(columns))
-            # is_valid = False
+            drop_columns.extend(columns)
+            self._logger.error('Volume data contains zeros: ' +
+                               ', '.join(columns))
+            is_valid = False
 
-        # Only return dataframes if all validation passed.
-        if is_valid:
-            return daily
-        else:
-            return None
+        # If validation fails, log error and drop any responsible columns.
+        if is_valid is False:
+            self._logger.error('Dataframes validation failed')
+            if len(drop_columns) > 0:
+                self._logger.warning('Dropping columns: ' +
+                                     ', '.join(drop_columns))
+                daily['price'] = daily['price'].drop(drop_columns, axis=1)
+                daily['volume'] = daily['volume'].drop(drop_columns, axis=1)
+
+        return daily
 
     def _scrape_handler(self, url, context, result):
         """Stores the result of scrapes in memory and writes to file.

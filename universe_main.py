@@ -19,7 +19,6 @@
 
 TODO: Usage!
 """
-
 import logging
 import logging.config
 import sys
