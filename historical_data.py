@@ -23,7 +23,7 @@ Example:
     import historical_data
     hd = historical_data.HistoricalData({
         'symbols_file': 'symbols.csv',
-        'output_dir': '20160115/',
+        'output_dir': 'data/20160115/',
         'end_date': '20160115',
         'start_date': '20150701',
     }, tor_scraper_config)  # See tor_scraper documentation.
@@ -163,8 +163,12 @@ class HistoricalData(object):
             if len(drop_columns) > 0:
                 self._logger.warning('Dropping columns: ' +
                                      ', '.join(drop_columns))
-                daily['price'] = daily['price'].drop(drop_columns, axis=1)
-                daily['volume'] = daily['volume'].drop(drop_columns, axis=1)
+                daily['price'].drop(drop_columns, axis=1, inplace=True)
+                daily['volume'].drop(drop_columns, axis=1, inplace=True)
+
+        # Sort rows by datetime in descending order.
+        daily['price'].sort_index(ascending=False, inplace=True)
+        daily['volume'].sort_index(ascending=False, inplace=True)
 
         return daily
 
