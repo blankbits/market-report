@@ -15,15 +15,17 @@
 # limitations under the License.
 # ==============================================================================
 
-"""TODO
+"""Contains a main function which creates a universe report and sends via email.
+It defaults to using the config specified in config.yaml, but this and the
+config for historical data can be overridden with command line args.
 
-TODO: Usage!
+Example:
+    ./universe_main.py --config_file universe_config.yaml
 """
 
 import argparse
 import logging
 import logging.config
-import sys
 
 import yaml
 
@@ -59,7 +61,7 @@ def main():
         config['historical_data_config']['start_date'] = args.start_date
     if args.end_date is not None:
         config['historical_data_config']['end_date'] = args.end_date
-    
+
     # Setup logger.
     logging.config.dictConfig(config['logging_config'])
     logger = logging.getLogger(__name__)
