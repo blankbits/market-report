@@ -167,9 +167,9 @@ class HistoricalData(object):
                 daily['price'].drop(drop_columns, axis=1, inplace=True)
                 daily['volume'].drop(drop_columns, axis=1, inplace=True)
 
-        # Sort rows by datetime in descending order.
-        daily['price'].sort_index(ascending=False, inplace=True)
-        daily['volume'].sort_index(ascending=False, inplace=True)
+        # Sort rows by datetime in ascending order.
+        daily['price'].sort_index(inplace=True)
+        daily['volume'].sort_index(inplace=True)
 
         return daily
 

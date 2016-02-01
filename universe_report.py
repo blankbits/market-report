@@ -38,7 +38,7 @@ class UniverseReport(object):
     def __init__(self, daily):
         """UniverseReport must be initialized with a pandas.DataFrame of prices
         of the same type returned by historical_data.get_daily(). Rows represent
-        dates in descending order, and columns represent financial instruments.
+        dates in ascending order, and columns represent financial instruments.
 
         Args:
             daily: pandas.DataFrame containing historical price data.
@@ -53,9 +53,12 @@ class UniverseReport(object):
             offset: Number of rows (days) back to go when calculating returns.
             bins: List of boundaries between histogram bins in ascending order.
         """
-        returns = ((self._daily['price'].iloc[0, :] - (
-            self._daily['price'].iloc[offset, :])) / (
-                self._daily['price'].iloc[offset, :])).sort_values()
+        # returns = ((self._daily['price'].iloc[0, :] - (
+        #     self._daily['price'].iloc[offset, :])) / (
+        #         self._daily['price'].iloc[offset, :])).sort_values()
+        returns = ((self._daily['price'].iloc[-1, :] - (
+            self._daily['price'].iloc[-(offset + 1), :])) / (
+                self._daily['price'].iloc[-(offset + 1), :])).sort_values()
 
         # If no bins provided, create default of 20 equally spaced bins.
         if bins is None:
@@ -96,26 +99,36 @@ class UniverseReport(object):
                 This must be at least 4 so that there are 2 periods to compare.
             count: Number of values to include for volatility and volume.
         """
-        # Prices with the most recent value at a max or min for the period.
-        price_at_high = 'At High\n' + text_utils.get_column(
-            self._daily['price'].ix[0, self._daily['price'].max(axis=0) == (
-                self._daily['price'].iloc[0, :])], 2)
-        price_at_low = 'At Low\n' + text_utils.get_column(
-            self._daily['price'].ix[0, self._daily['price'].min(axis=0) == (
-                self._daily['price'].iloc[0, :])], 2)
+        period_end = self._daily['price'].shape[0]
+        period_start = period_end - offset
+        period_midpoint = period_end - int(np.around(offset * .5))
 
-        # Percent change in stdev from the first to second half of the period.
-        volatility_change = self._daily['price'].iloc[range(
-            offset / 2 + 1), :].std(axis=0) / (self._daily['price'].iloc[range(
-                (offset / 2), offset + 1), :].std(axis=0))
+        # Prices with the most recent value at a max or min for the period.
+        price_at_high_cols = self._daily['price'].iloc[
+            period_start:, :].max(axis=0) == self._daily['price'].iloc[-1, :]
+        price_at_high = 'At High\n' + text_utils.get_column(
+            self._daily['price'].ix[-1, price_at_high_cols], 2)
+        price_at_low_cols = self._daily['price'].iloc[
+            period_start:, :].min(axis=0) == self._daily['price'].iloc[-1, :]
+        price_at_low = 'At Low\n' + text_utils.get_column(
+            self._daily['price'].ix[-1, price_at_low_cols], 2)
+
+        # Change in price stdev from the first to second half of the period.
+        # Ranges are inclusive because we care about differences across days.
+        first_range = range(period_start - 1, period_midpoint)
+        second_range = range(period_midpoint - 1, period_end)
+        volatility_change = self._daily['price'].iloc[first_range, :].std(
+            axis=0) / (self._daily['price'].iloc[second_range, :].std(axis=0))
         volatility_change = 'Volatility Chg\n' + text_utils.get_column(
             volatility_change.sort_values(ascending=False)[range(count)], 2, (
                 True))
 
-        # Percent change in volume from the first to second half of the period.
-        volume_change = self._daily['volume'].iloc[range(
-            offset / 2 + 1), :].sum(axis=0) / (self._daily['volume'].iloc[range(
-                (offset / 2), offset + 1), :].sum(axis=0))
+        # Change in volume from the first to second half of the period.
+        # Ranges are not inclusive since we are summing volume for each day.
+        first_range = range(period_start, period_midpoint)
+        second_range = range(period_midpoint, period_end)
+        volume_change = self._daily['volume'].iloc[first_range, :].sum(
+            axis=0) / (self._daily['volume'].iloc[second_range, :].sum(axis=0))
         volume_change = 'Volume Chg\n' + text_utils.get_column(
             volume_change.sort_values(ascending=False)[range(count)], 2, True)
 
