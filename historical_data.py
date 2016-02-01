@@ -29,6 +29,7 @@ Example:
     }, tor_scraper_config)  # See tor_scraper documentation.
     daily_data = hd.get_daily()
 """
+
 import csv
 import io
 import logging
