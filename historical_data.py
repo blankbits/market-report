@@ -21,13 +21,13 @@ This is convenient in the event scraping is interrupted and must be restarted.
 
 Example:
     import historical_data
-    hd = historical_data.HistoricalData({
+    data = historical_data.HistoricalData({
         'symbols_file': 'symbols.csv',
         'output_dir': 'data/20160115/',
         'end_date': '20160115',
         'start_date': '20150701',
     }, tor_scraper_config)  # See tor_scraper documentation.
-    daily_data = hd.get_daily()
+    daily_data = data.get_daily()
 """
 
 import csv
@@ -63,7 +63,7 @@ class HistoricalData(object):
         # output dir if needed and proceed with scrape.
         pickle_path = self._config['output_dir'] + 'daily.pickle'
         if os.path.exists(pickle_path):
-            self._logger.info('Pickle file already exists for end_date:' +
+            self._logger.info('Pickle file already exists for end_date: ' +
                               self._config['end_date'])
             with open(pickle_path, 'rb') as pickle_file:
                 return pickle.load(pickle_file)

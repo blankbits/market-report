@@ -115,7 +115,7 @@ class UniverseReport(object):
 
         # Change in price stdev from the first to second half of the period.
         # Ranges are inclusive because we care about differences across days.
-        first_range = range(period_start - 1, period_midpoint)
+        first_range = range(period_start, period_midpoint)
         second_range = range(period_midpoint - 1, period_end)
         volatility_change = self._daily['price'].iloc[first_range, :].std(
             axis=0) / (self._daily['price'].iloc[second_range, :].std(axis=0))

@@ -26,6 +26,7 @@ Example:
 import argparse
 import logging
 import logging.config
+import sys
 
 import yaml
 
@@ -72,7 +73,7 @@ def main():
     daily = data.get_daily()
     if daily is None:
         logger.error('No daily dataframe')
-        return
+        sys.exit(1)
 
     # Create and send email for universe report.
     universe = universe_report.UniverseReport(daily).get_default_report()
