@@ -18,9 +18,9 @@ universe of financial instruments e.g. components of a market index.
 
 Example:
     # See historical_data documentation for more info.
-    hd = historical_data.HistoricalData(historical_data_config,
+    data = historical_data.HistoricalData(historical_data_config,
                                         tor_scraper_config)
-    daily = hd.get_daily()
+    daily = data.get_daily()
     if daily is None:
         return
     print universe_report.UniverseReport(daily).get_default_report()
