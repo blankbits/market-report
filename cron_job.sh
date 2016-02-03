@@ -18,8 +18,7 @@ while [ $counter -lt 5 ]; do  # Max 5 retries.
   echo "Attempt: ${counter}"
   echo $universe_cmd
   eval $universe_cmd
-  if [ $? -eq 0 ];
-  then
+  if [ $? -eq 0 ]; then
     break
   fi
 
