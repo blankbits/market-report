@@ -9,7 +9,6 @@ universe_cmd="./universe_main.py --config_file universe_config.yaml
   --output_dir universe_data/${end_date}/ --start_date ${start_date}
   --end_date ${end_date}"
 
-eval "pkill tor.real"  # Kill any existing TOR processes.
 eval "export PYTHONPATH=/Users/peter/Desktop/Code"
 eval "cd /Users/peter/Desktop/Code/market_report"
 
@@ -23,4 +22,7 @@ while [ $counter -lt 5 ]; do  # Max 5 retries.
   then
     break
   fi
+
+  eval "pkill tor.real"  # Kill any existing TOR processes.
+  sleep 10
 done
