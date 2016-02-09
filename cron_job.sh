@@ -20,7 +20,7 @@
 
 start_date=`/bin/date -v -56d +%Y%m%d`  # YYYYMMDD 8 weeks ago.
 end_date=`/bin/date +%Y%m%d`  # YYYYMMDD today.
-universe_cmd="./universe_main.py --config_file universe_config.yaml
+universe_cmd="./universe_main.py --config_file universe_config_local.yaml
   --output_dir universe_data/${end_date}/ --start_date ${start_date}
   --end_date ${end_date}"
 
