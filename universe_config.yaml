@@ -6,13 +6,13 @@ emailer_config:
   recipients: ['']
   
 historical_data_config:
-  symbols_file: 'symbols.csv'
-  output_dir: '20160122/'
+  symbols_file: 'universe_symbols.csv'
+  output_dir: 'universe_data/20160128/'
   start_date: '20150701'
-  end_date: '20160122'
+  end_date: '20160128'
   
 tor_scraper_config:
-  thread_count: 1
+  thread_count: 10
   socks_port_offset: 9250
   control_port_offset: 9350
   data_directory: 'tor_data/'
@@ -31,12 +31,6 @@ logging_config:
       level: DEBUG
       formatter: simple
       stream: ext://sys.stdout
-    file:
-      class: logging.FileHandler
-      level: DEBUG
-      formatter: simple
-      filename: 'log.txt'
-      mode: 'w'
   root:
     level: DEBUG
-    handlers: [console, file]
+    handlers: [console]
