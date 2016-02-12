@@ -126,19 +126,19 @@ class HistoricalData(object):
                 price[key] = csv_data['Adj Close']
                 volume[key] = csv_data['Volume']
 
-        daily['price'] = pd.DataFrame(price)
+        daily['adj_close'] = pd.DataFrame(price)
         daily['volume'] = pd.DataFrame(volume)
 
         # Validate dataframes.
         self._logger.info('Validating dataframes')
         end_date = pd.to_datetime(self._config['end_date'])
-        if daily['price'].index.max() != end_date or (
+        if daily['adj_close'].index.max() != end_date or (
                 daily['volume'].index.max() != end_date):
             self._logger.error('End date mismatch')
             is_valid = False
-        if np.any(daily['price'].isnull()):
-            columns = daily['price'].columns[
-                daily['price'].isnull().any(axis=0)].values
+        if np.any(daily['adj_close'].isnull()):
+            columns = daily['adj_close'].columns[
+                daily['adj_close'].isnull().any(axis=0)].values
             drop_columns.extend(columns)
             self._logger.error('Price data contains nulls: ' +
                                ', '.join(columns))
@@ -164,11 +164,11 @@ class HistoricalData(object):
             if len(drop_columns) > 0:
                 self._logger.warning('Dropping columns: ' +
                                      ', '.join(drop_columns))
-                daily['price'].drop(drop_columns, axis=1, inplace=True)
+                daily['adj_close'].drop(drop_columns, axis=1, inplace=True)
                 daily['volume'].drop(drop_columns, axis=1, inplace=True)
 
         # Sort rows by datetime in ascending order.
-        daily['price'].sort_index(inplace=True)
+        daily['adj_close'].sort_index(inplace=True)
         daily['volume'].sort_index(inplace=True)
 
         return daily

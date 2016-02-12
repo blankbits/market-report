@@ -53,12 +53,12 @@ class UniverseReport(object):
             offset: Number of rows (days) back to go when calculating returns.
             bins: List of boundaries between histogram bins in ascending order.
         """
-        # returns = ((self._daily['price'].iloc[0, :] - (
-        #     self._daily['price'].iloc[offset, :])) / (
-        #         self._daily['price'].iloc[offset, :])).sort_values()
-        returns = ((self._daily['price'].iloc[-1, :] - (
-            self._daily['price'].iloc[-(offset + 1), :])) / (
-                self._daily['price'].iloc[-(offset + 1), :])).sort_values()
+        # returns = ((self._daily['adj_close'].iloc[0, :] - (
+        #     self._daily['adj_close'].iloc[offset, :])) / (
+        #         self._daily['adj_close'].iloc[offset, :])).sort_values()
+        returns = ((self._daily['adj_close'].iloc[-1, :] - (
+            self._daily['adj_close'].iloc[-(offset + 1), :])) / (
+                self._daily['adj_close'].iloc[-(offset + 1), :])).sort_values()
 
         # If no bins provided, create default of 20 equally spaced bins.
         if bins is None:
@@ -99,26 +99,29 @@ class UniverseReport(object):
                 This must be at least 4 so that there are 2 periods to compare.
             count: Number of values to include for volatility and volume.
         """
-        period_end = self._daily['price'].shape[0]
+        period_end = self._daily['adj_close'].shape[0]
         period_start = period_end - offset
         period_midpoint = period_end - int(np.around(offset * .5))
 
         # Prices with the most recent value at a max or min for the period.
-        price_at_high_cols = self._daily['price'].iloc[
-            period_start:, :].max(axis=0) == self._daily['price'].iloc[-1, :]
+        price_at_high_cols = self._daily['adj_close'].iloc[
+            period_start:, :].max(axis=0) == self._daily['adj_close'].iloc[
+                -1, :]
         price_at_high = 'At High\n' + text_utils.get_column(
-            self._daily['price'].ix[-1, price_at_high_cols], 2)
-        price_at_low_cols = self._daily['price'].iloc[
-            period_start:, :].min(axis=0) == self._daily['price'].iloc[-1, :]
+            self._daily['adj_close'].ix[-1, price_at_high_cols], 2)
+        price_at_low_cols = self._daily['adj_close'].iloc[
+            period_start:, :].min(axis=0) == self._daily['adj_close'].iloc[
+                -1, :]
         price_at_low = 'At Low\n' + text_utils.get_column(
-            self._daily['price'].ix[-1, price_at_low_cols], 2)
+            self._daily['adj_close'].ix[-1, price_at_low_cols], 2)
 
         # Change in price stdev from the first to second half of the period.
         # Ranges are inclusive because we care about differences across days.
         first_range = range(period_start, period_midpoint)
         second_range = range(period_midpoint - 1, period_end)
-        volatility_change = self._daily['price'].iloc[first_range, :].std(
-            axis=0) / (self._daily['price'].iloc[second_range, :].std(axis=0))
+        volatility_change = self._daily['adj_close'].iloc[first_range, :].std(
+            axis=0) / (self._daily['adj_close'].iloc[second_range, :].std(
+                axis=0))
         volatility_change = 'Volatility Chg\n' + text_utils.get_column(
             volatility_change.sort_values(ascending=False)[range(count)], 2, (
                 True))
