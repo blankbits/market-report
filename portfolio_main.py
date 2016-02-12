@@ -15,12 +15,13 @@
 # limitations under the License.
 # ==============================================================================
 
-"""Contains a main function which creates a universe report and sends via email.
-It defaults to using the config specified in universe_config.yaml, but this and
-the config for historical data can be overridden with command line args.
+"""Contains a main function which creates a portfolio report and sends via
+email. It defaults to using the config specified in portfolio_config.yaml, but
+this and the config for historical data can be overridden with command line
+args.
 
 Example:
-    ./universe_main.py --config_file universe_config.yaml
+    ./portfolio_main.py --config_file portfolio_config.yaml
 """
 
 import argparse
@@ -32,7 +33,7 @@ import yaml
 
 import emailer
 import historical_data
-import universe_report
+#import portfolio_report
 
 def main():
     """Begin executing main logic of the script.
@@ -40,7 +41,7 @@ def main():
     # Parse command line args.
     parser = argparse.ArgumentParser()
     parser.add_argument('--config_file', metavar='FILE', help='config YAML',
-                        default='universe_config.yaml')
+                        default='portfolio_config.yaml')
     parser.add_argument('--symbols_file', metavar='FILE', help=(
         'historical_data_config symbols_file'))
     parser.add_argument('--output_dir', metavar='FILE', help=(
@@ -75,11 +76,11 @@ def main():
         logger.error('No daily dataframe')
         sys.exit(1)
 
-    # Create and send email for universe report.
-    universe = universe_report.UniverseReport(daily).get_default_report()
-    sender = emailer.Emailer(config['emailer_config'])
-    sender.send('Russell 3000 Report -- ' + (
-        config['historical_data_config']['end_date']), universe)
+    # # Create and send email for portfolio report.
+    # portfolio = portfolio_report.UniverseReport(daily).get_default_report()
+    # sender = emailer.Emailer(config['emailer_config'])
+    # sender.send('Russell 3000 Report -- ' + (
+    #     config['historical_data_config']['end_date']), portfolio)
 
 # If in top-level script environment, run main().
 if __name__ == '__main__':

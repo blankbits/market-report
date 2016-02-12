@@ -1,0 +1,50 @@
+emailer_config:
+  host: 'smtp.gmail.com'
+  port: 465
+  username: ''
+  password: ''
+  recipients: ['']
+  
+historical_data_config:
+  symbols_file: 'portfolio_symbols.csv'
+  output_dir: 'portfolio_data/20160128/'
+  start_date: '20150701'
+  end_date: '20160128'
+  
+tor_scraper_config:
+  thread_count: 2
+  socks_port_offset: 9250
+  control_port_offset: 9350
+  data_directory: 'tor_data/'
+  tor_cmd: '/Applications/TorBrowser.app/TorBrowser/Tor/tor.real'
+  public_ip_url: 'https://api.ipify.org'
+
+# Passed through to logging.config.dictConfig(config)
+logging_config:
+  version: 1
+  formatters:
+    simple:
+      format: '%(asctime)s %(levelname)-8s %(name)s - %(message)s'
+  handlers:
+    console:
+      class: logging.StreamHandler
+      level: DEBUG
+      formatter: simple
+      stream: ext://sys.stdout
+  root:
+    level: DEBUG
+    handlers: [console]
+
+portfolio_report_config:
+  value_ratio: .1
+  dates:
+    20160101:
+      symbols:
+        BND: 1000
+        VTI: 5000
+      capital_change: 0
+    20160201:
+      symbols:
+        BND: 1000
+        VTI: 5000
+      capital_change: 0
