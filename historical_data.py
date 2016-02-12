@@ -109,12 +109,13 @@ class HistoricalData(object):
     def _build_dataframes(self, scrape_data):
         """Validate and combine raw scrape data into dataframes.
         """
-        # Create dataframes for price and volume.
+        # Create dataframes for prices and volume.
         self._logger.info('Creating dataframes')
         is_valid = True
         drop_columns = []
         daily = {}
-        price = {}
+        close = {}
+        adj_close = {}
         volume = {}
         for key, value in scrape_data.iteritems():
             if value is None:
@@ -123,10 +124,12 @@ class HistoricalData(object):
                 csv_data = pd.read_csv(io.StringIO(unicode(value)))
                 csv_data['Date'] = csv_data['Date'].apply(pd.to_datetime)
                 csv_data = csv_data.set_index('Date')
-                price[key] = csv_data['Adj Close']
+                close[key] = csv_data['Close']
+                adj_close[key] = csv_data['Adj Close']
                 volume[key] = csv_data['Volume']
 
-        daily['adj_close'] = pd.DataFrame(price)
+        daily['close'] = pd.DataFrame(close)
+        daily['adj_close'] = pd.DataFrame(adj_close)
         daily['volume'] = pd.DataFrame(volume)
 
         # Validate dataframes.
