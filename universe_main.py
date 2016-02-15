@@ -76,10 +76,10 @@ def main():
         sys.exit(1)
 
     # Create and send email for universe report.
-    universe = universe_report.UniverseReport(daily).get_default_report()
+    universe = universe_report.UniverseReport(config['universe_report_config'],
+                                              daily).get_report()
     sender = emailer.Emailer(config['emailer_config'])
-    sender.send('Russell 3000 Report -- ' + (
-        config['historical_data_config']['end_date']), universe)
+    sender.send(universe['subject'], universe['body'])
 
 # If in top-level script environment, run main().
 if __name__ == '__main__':

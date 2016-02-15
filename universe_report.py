@@ -35,7 +35,7 @@ import text_utils
 class UniverseReport(object):
     """Contains all functionality for the universe_report module.
     """
-    def __init__(self, daily):
+    def __init__(self, config, daily):
         """UniverseReport must be initialized with a pandas.DataFrame of prices
         of the same type returned by historical_data.get_daily(). Rows represent
         dates in ascending order, and columns represent financial instruments.
@@ -43,9 +43,10 @@ class UniverseReport(object):
         Args:
             daily: pandas.DataFrame containing historical price data.
         """
+        self._config = config
         self._daily = daily
 
-    def get_returns_report(self, offset, bins=None):
+    def get_returns_section(self, offset, bins=None):
         """Creates a multi-line string containing a column of top winners and
         losers on the left, and a histogram of all returns on the right.
 
@@ -90,7 +91,7 @@ class UniverseReport(object):
 
         return text_utils.join_lines([returns_col, returns_hist], '    ')
 
-    def get_stats_report(self, offset, count):
+    def get_stats_section(self, offset, count):
         """Creates a multi-line string with several columns of stats about the
         universe for a given time period.
 
@@ -138,14 +139,16 @@ class UniverseReport(object):
         return text_utils.join_lines([price_at_high, price_at_low, (
             volatility_change), volume_change], '    ')
 
-    def get_default_report(self):
+    def get_report(self):
         """Creates a report including 1 and 20 day returns and 20 day stats. The
         offsets and bin boundaries are hard-coded.
         """
-        result = '1 Day Returns\n-------------\n'
-        result += self.get_returns_report(1, np.arange(-.2, .22, .02))
-        result += '20 Day Returns\n--------------\n'
-        result += self.get_returns_report(20, np.arange(-.5, .55, .05))
-        result += '20 Day Stats\n------------\n'
-        result += self.get_stats_report(20, 10)
-        return result
+        subject = self._config['subject_format'] % str(
+            self._daily['adj_close'].index[-1].date())
+        body = '1 Day Returns\n-------------\n'
+        body += self.get_returns_section(1, np.arange(-.2, .22, .02))
+        body += '20 Day Returns\n--------------\n'
+        body += self.get_returns_section(20, np.arange(-.5, .55, .05))
+        body += '20 Day Stats\n------------\n'
+        body += self.get_stats_section(20, 10)
+        return {'subject': subject, 'body': body}
