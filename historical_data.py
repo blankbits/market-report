@@ -45,7 +45,7 @@ class HistoricalData(object):
     """Contains the entire historical_data module.
     """
     def __init__(self, historical_data_config, tor_scraper_config):
-        """HistoricalData must be initialized with a args similar to those shown
+        """HistoricalData must be initialized with args similar to those shown
         in the example at the top of this file.
 
         Args:

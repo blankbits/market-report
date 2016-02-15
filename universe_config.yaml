@@ -37,3 +37,15 @@ logging_config:
 
 universe_report_config:
   subject_format: 'Universe Report -- %s'
+  body_returns:
+    1:
+      bins_start: -.2
+      bins_stop: .22
+      bins_step: .02
+    20:
+      bins_start: -.5
+      bins_stop: .55
+      bins_step: .05
+  body_stats:
+    20:
+      count: 10

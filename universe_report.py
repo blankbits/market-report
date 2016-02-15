@@ -23,7 +23,8 @@ Example:
     daily = data.get_daily()
     if daily is None:
         return
-    print universe_report.UniverseReport(daily).get_default_report()
+    print universe_report.UniverseReport(daily).get_report()
+    TODO: update this for new config.
 """
 
 import sys
@@ -42,6 +43,7 @@ class UniverseReport(object):
 
         Args:
             daily: pandas.DataFrame containing historical price data.
+        TODO: update this for new config.
         """
         self._config = config
         self._daily = daily
@@ -140,15 +142,18 @@ class UniverseReport(object):
             volatility_change), volume_change], '    ')
 
     def get_report(self):
-        """Creates a report including 1 and 20 day returns and 20 day stats. The
-        offsets and bin boundaries are hard-coded.
+        """Creates the entire report including returns and stats sections
+        determined by the config.
         """
         subject = self._config['subject_format'] % str(
             self._daily['adj_close'].index[-1].date())
-        body = '1 Day Returns\n-------------\n'
-        body += self.get_returns_section(1, np.arange(-.2, .22, .02))
-        body += '20 Day Returns\n--------------\n'
-        body += self.get_returns_section(20, np.arange(-.5, .55, .05))
-        body += '20 Day Stats\n------------\n'
-        body += self.get_stats_section(20, 10)
+        body = ''
+        for key, value in self._config['body_returns'].iteritems():
+            body += '%s Day Returns\n-------------\n' % str(key)
+            body += self.get_returns_section(key, np.arange(
+                float(value['bins_start']), float(value['bins_stop']),
+                float(value['bins_step'])))
+        for key, value in self._config['body_stats'].iteritems():
+            body += '%s Day Stats\n------------\n' % str(key)
+            body += self.get_stats_section(key, value['count'])
         return {'subject': subject, 'body': body}
