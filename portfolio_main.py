@@ -33,7 +33,7 @@ import yaml
 
 import emailer
 import historical_data
-#import portfolio_report
+import portfolio_report
 
 def main():
     """Begin executing main logic of the script.
@@ -76,11 +76,11 @@ def main():
         logger.error('No daily dataframe')
         sys.exit(1)
 
-    # # Create and send email for portfolio report.
-    # portfolio = portfolio_report.UniverseReport(daily).get_default_report()
+    # Create and send email for universe report.
+    portfolio = portfolio_report.PortfolioReport(
+        config['portfolio_report_config'], daily).get_report()
     # sender = emailer.Emailer(config['emailer_config'])
-    # sender.send('Russell 3000 Report -- ' + (
-    #     config['historical_data_config']['end_date']), portfolio)
+    # sender.send(portfolio['subject'], portfolio['body'])
 
 # If in top-level script environment, run main().
 if __name__ == '__main__':

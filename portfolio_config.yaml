@@ -36,6 +36,7 @@ logging_config:
     handlers: [console]
 
 portfolio_report_config:
+  subject_format: 'Portfolio Report -- %s'
   value_ratio: .1
   dates:
     20160101:
