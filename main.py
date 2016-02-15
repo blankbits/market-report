@@ -15,12 +15,12 @@
 # limitations under the License.
 # ==============================================================================
 
-"""Contains a main function which creates a universe report and sends via email.
-It defaults to using the config specified in universe_config.yaml, but this and
-the config for historical data can be overridden with command line args.
+"""Contains a main function which creates market reports and sends via email. It
+defaults to using the config specified in config.yaml, but this and the config
+for historical data can be overridden with command line args.
 
 Example:
-    ./universe_main.py --config_file universe_config.yaml
+    ./main.py --config_file custom_config.yaml
 """
 
 import argparse
@@ -32,6 +32,7 @@ import yaml
 
 import emailer
 import historical_data
+import portfolio_report
 import universe_report
 
 def main():
@@ -40,7 +41,7 @@ def main():
     # Parse command line args.
     parser = argparse.ArgumentParser()
     parser.add_argument('--config_file', metavar='FILE', help='config YAML',
-                        default='universe_config.yaml')
+                        default='config.yaml')
     parser.add_argument('--symbols_file', metavar='FILE', help=(
         'historical_data_config symbols_file'))
     parser.add_argument('--output_dir', metavar='FILE', help=(
@@ -75,11 +76,17 @@ def main():
         logger.error('No daily dataframe')
         sys.exit(1)
 
-    # Create and send email for universe report.
-    universe = universe_report.UniverseReport(config['universe_report_config'],
-                                              daily).get_report()
-    sender = emailer.Emailer(config['emailer_config'])
-    sender.send(universe['subject'], universe['body'])
+    # If respective configs exist, create and send email reports.
+    if 'portfolio_report_config' in config:
+        portfolio = portfolio_report.PortfolioReport(
+            config['portfolio_report_config'], daily).get_report()
+        # sender = emailer.Emailer(config['emailer_config'])
+        # sender.send(portfolio['subject'], portfolio['body'])
+    if 'universe_report_config' in config:
+        universe = universe_report.UniverseReport(
+            config['universe_report_config'], daily).get_report()
+        sender = emailer.Emailer(config['emailer_config'])
+        sender.send(universe['subject'], universe['body'])
 
 # If in top-level script environment, run main().
 if __name__ == '__main__':
