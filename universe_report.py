@@ -19,12 +19,20 @@ universe of financial instruments e.g. components of a market index.
 Example:
     # See historical_data documentation for more info.
     data = historical_data.HistoricalData(historical_data_config,
-                                        tor_scraper_config)
+                                          tor_scraper_config)
     daily = data.get_daily()
     if daily is None:
         return
-    print universe_report.UniverseReport(daily).get_report()
-    TODO: update this for new config.
+    print universe_report.UniverseReport({
+        'subject_format': 'Universe Report -- %s',
+        'body_returns': {
+            1: {'bins_start': -.2, 'bins_stop': .22, 'bins_step': .02, },
+            20: {'bins_start': -.5, 'bins_stop': .55, 'bins_step': .05, },
+        },
+        'body_stats': {
+            1: {'count': 10, },
+        },
+    }, daily).get_report()
 """
 
 import sys
@@ -36,16 +44,17 @@ import text_utils
 class UniverseReport(object):
     """Contains all functionality for the universe_report module.
     """
-    def __init__(self, config, daily):
-        """UniverseReport must be initialized with a pandas.DataFrame of prices
-        of the same type returned by historical_data.get_daily(). Rows represent
-        dates in ascending order, and columns represent financial instruments.
+    def __init__(self, universe_report_config, daily):
+        """UniverseReport must be initialized with args similar to those shown
+        in the example at the top of this file.
 
         Args:
-            daily: pandas.DataFrame containing historical price data.
-        TODO: update this for new config.
+            universe_report_config: Determines the behavior of this instance.
+            daily: pandas.DataFrame of prices of the same type returned by
+                historical_data.get_daily(). Rows represent dates in ascending
+                order, and columns represent financial instruments.
         """
-        self._config = config
+        self._config = universe_report_config
         self._daily = daily
 
     def get_returns_section(self, offset, bins=None):
