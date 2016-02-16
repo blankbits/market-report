@@ -50,45 +50,26 @@ class PortfolioReport(object):
         self._config = portfolio_report_config
         self._daily = daily
 
-    def test_plot(self):
-        #plt.style.use('ggplot')
-        plt.style.use('fivethirtyeight')
+    def get_returns_bar_plot(self, offset):
+        returns = ((self._daily['adj_close'].iloc[-1, :] - (
+            self._daily['adj_close'].iloc[-(offset + 1), :])) / (
+                self._daily['adj_close'].iloc[-(offset + 1), :])).sort_index()
+        max_abs_return = max(np.abs(returns))
 
-        fig, axes = plt.subplots(ncols=2, nrows=2)
-        ax1, ax2, ax3, ax4 = axes.ravel()
+        # Color gains green, losses red, and adjust alpha by magnitude.
+        colors = [(0.0, 0.0, 0.0)] * len(returns)
+        for i, item in enumerate(returns):
+            alpha = .25 + .75 * (abs(item) / max_abs_return)
+            colors[i] = (1.0, .33, .33, alpha) if item < 0 else (
+                .33, 1.0, .33, alpha)
 
-        # scatter plot (Note: `plt.scatter` doesn't use default colors)
-        x, y = np.random.normal(size=(2, 200))
-        ax1.plot(x, y, 'o')
+        # Create the plot and format y ticks as percents.
+        returns_bar_plot = returns.plot(kind='bar', color=colors)
+        y_ticks = returns_bar_plot.get_yticks()
+        returns_bar_plot.set_yticklabels([
+            '{:3.2f}%'.format(tick * 100) for tick in y_ticks])
 
-        # sinusoidal lines with colors from default color cycle
-        L = 2*np.pi
-        x = np.linspace(0, L)
-        ncolors = len(plt.rcParams['axes.color_cycle'])
-        shift = np.linspace(0, L, ncolors, endpoint=False)
-        for s in shift:
-            ax2.plot(x, np.sin(x + s), '-')
-
-        ax2.margins(0)
-
-        # bar graphs
-        x = np.arange(5)
-        y1, y2 = np.random.randint(1, 25, size=(2, 5))
-        width = 0.25
-        ax3.bar(x, y1, width)
-        ax3.bar(x + width, y2, width, color=plt.rcParams['axes.color_cycle'][0])
-        ax3.set_xticks(x + width)
-        ax3.set_xticklabels(['a', 'b', 'c', 'd', 'e'])
-
-        # circles with colors from default color cycle
-        for i, color in enumerate(plt.rcParams['axes.color_cycle']):
-            xy = np.random.normal(size=2)
-            ax4.add_patch(plt.Circle(xy, radius=0.3, color=color))
-
-        ax4.axis('equal')
-        ax4.margins(0)
-
-        plt.show()
+        return returns_bar_plot
 
     def get_report(self):
         """Creates the entire report.
@@ -97,6 +78,9 @@ class PortfolioReport(object):
             self._daily['adj_close'].index[-1].date())
         body = ''
 
-        self.test_plot()
+        plt.style.use('ggplot')
+        plt.figure()
+        self.get_returns_bar_plot(1)
+        plt.show()
 
         return {'subject': subject, 'body': body}

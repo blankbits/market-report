@@ -65,9 +65,6 @@ class UniverseReport(object):
             offset: Number of rows (days) back to go when calculating returns.
             bins: List of boundaries between histogram bins in ascending order.
         """
-        # returns = ((self._daily['adj_close'].iloc[0, :] - (
-        #     self._daily['adj_close'].iloc[offset, :])) / (
-        #         self._daily['adj_close'].iloc[offset, :])).sort_values()
         returns = ((self._daily['adj_close'].iloc[-1, :] - (
             self._daily['adj_close'].iloc[-(offset + 1), :])) / (
                 self._daily['adj_close'].iloc[-(offset + 1), :])).sort_values()
