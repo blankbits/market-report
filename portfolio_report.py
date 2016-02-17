@@ -65,7 +65,7 @@ class PortfolioReport(object):
 
         # Create the plot and format y ticks as percents.
         bar_plot = returns.plot(kind='bar', color=colors)
-        bar_plot.set_title('%s Day %% Change\n' % str(offset))
+        bar_plot.set_title('{:d} Day Change %\n'.format(offset))
         y_ticks = bar_plot.get_yticks()
         bar_plot.set_yticklabels([
             '{:3.1f}%'.format(tick * 100) for tick in y_ticks])
@@ -76,12 +76,14 @@ class PortfolioReport(object):
         returns = ((self._daily['adj_close'].iloc[-1, :] - (
             self._daily['adj_close'].iloc[-(offset + 1), :])) / (
                 self._daily['adj_close'].iloc[-(offset + 1), :])).sort_index()
-        
+
         # Use most recent portfolio from config to convert to dollar returns.
         portfolio = self._config['dates'][max(self._config['dates'], key=int)]
         for i in returns.index:
             returns[str(i)] *= self._daily['adj_close'].ix[
                 -(offset + 1), str(i)] * (portfolio['symbols'][str(i)])
+
+        returns *= self._config['value_ratio']
         max_abs_return = max(np.abs(returns))
 
         # Color gains green, losses red, and adjust color by magnitude.
@@ -93,7 +95,8 @@ class PortfolioReport(object):
 
         # Create the plot and format y ticks as percents.
         bar_plot = returns.plot(kind='bar', color=colors)
-        bar_plot.set_title('%s Day $ Change\n' % str(offset))
+        bar_plot.set_title('{:d} Day Change | ${:,.2f}\n'.format(
+            offset, np.sum(returns)))
         y_ticks = bar_plot.get_yticks()
         bar_plot.set_yticklabels(['${:,.0f}'.format(tick) for tick in y_ticks])
 
