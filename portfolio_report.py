@@ -50,26 +50,54 @@ class PortfolioReport(object):
         self._config = portfolio_report_config
         self._daily = daily
 
-    def get_returns_bar_plot(self, offset):
+    def get_percent_change_bar_plot(self, offset):
         returns = ((self._daily['adj_close'].iloc[-1, :] - (
             self._daily['adj_close'].iloc[-(offset + 1), :])) / (
                 self._daily['adj_close'].iloc[-(offset + 1), :])).sort_index()
         max_abs_return = max(np.abs(returns))
 
-        # Color gains green, losses red, and adjust alpha by magnitude.
+        # Color gains green, losses red, and adjust color by magnitude.
         colors = [(0.0, 0.0, 0.0)] * len(returns)
         for i, item in enumerate(returns):
-            alpha = .25 + .75 * (abs(item) / max_abs_return)
-            colors[i] = (1.0, .33, .33, alpha) if item < 0 else (
-                .33, 1.0, .33, alpha)
+            intensity = .75 * (1.0 - (abs(item) / max_abs_return))
+            colors[i] = (1.0, intensity, intensity, .67) if item < 0 else (
+                intensity, 1.0, intensity, .67)
 
         # Create the plot and format y ticks as percents.
-        returns_bar_plot = returns.plot(kind='bar', color=colors)
-        y_ticks = returns_bar_plot.get_yticks()
-        returns_bar_plot.set_yticklabels([
+        bar_plot = returns.plot(kind='bar', color=colors)
+        bar_plot.set_title('%s Day %% Change\n' % str(offset))
+        y_ticks = bar_plot.get_yticks()
+        bar_plot.set_yticklabels([
             '{:3.1f}%'.format(tick * 100) for tick in y_ticks])
 
-        return returns_bar_plot
+        return bar_plot
+
+    def get_dollar_change_bar_plot(self, offset):
+        returns = ((self._daily['adj_close'].iloc[-1, :] - (
+            self._daily['adj_close'].iloc[-(offset + 1), :])) / (
+                self._daily['adj_close'].iloc[-(offset + 1), :])).sort_index()
+        
+        # Use most recent portfolio from config to convert to dollar returns.
+        portfolio = self._config['dates'][max(self._config['dates'], key=int)]
+        for i in returns.index:
+            returns[str(i)] *= self._daily['adj_close'].ix[
+                -(offset + 1), str(i)] * (portfolio['symbols'][str(i)])
+        max_abs_return = max(np.abs(returns))
+
+        # Color gains green, losses red, and adjust color by magnitude.
+        colors = [(0.0, 0.0, 0.0)] * len(returns)
+        for i, item in enumerate(returns):
+            intensity = .75 * (1.0 - (abs(item) / max_abs_return))
+            colors[i] = (1.0, intensity, intensity, .67) if item < 0 else (
+                intensity, 1.0, intensity, .67)
+
+        # Create the plot and format y ticks as percents.
+        bar_plot = returns.plot(kind='bar', color=colors)
+        bar_plot.set_title('%s Day $ Change\n' % str(offset))
+        y_ticks = bar_plot.get_yticks()
+        bar_plot.set_yticklabels(['${:,.0f}'.format(tick) for tick in y_ticks])
+
+        return bar_plot
 
     def get_report(self):
         """Creates the entire report.
@@ -80,7 +108,9 @@ class PortfolioReport(object):
 
         plt.style.use('ggplot')
         plt.figure()
-        self.get_returns_bar_plot(1)
+        self.get_percent_change_bar_plot(1)
+        plt.figure()
+        self.get_dollar_change_bar_plot(1)
         plt.show()
 
         return {'subject': subject, 'body': body}
