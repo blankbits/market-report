@@ -67,7 +67,7 @@ class PortfolioReport(object):
         returns_bar_plot = returns.plot(kind='bar', color=colors)
         y_ticks = returns_bar_plot.get_yticks()
         returns_bar_plot.set_yticklabels([
-            '{:3.2f}%'.format(tick * 100) for tick in y_ticks])
+            '{:3.1f}%'.format(tick * 100) for tick in y_ticks])
 
         return returns_bar_plot
 
