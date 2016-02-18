@@ -50,7 +50,7 @@ class PortfolioReport(object):
         self._config = portfolio_report_config
         self._daily = daily
 
-    def get_percent_change_bar_plot(self, offset):
+    def plot_percent_change_bars(self, offset):
         returns = ((self._daily['adj_close'].iloc[-1, :] - (
             self._daily['adj_close'].iloc[-(offset + 1), :])) / (
                 self._daily['adj_close'].iloc[-(offset + 1), :])).sort_index()
@@ -68,11 +68,11 @@ class PortfolioReport(object):
         bar_plot.set_title('{:d} Day Change %\n'.format(offset))
         y_ticks = bar_plot.get_yticks()
         bar_plot.set_yticklabels([
-            '{:3.1f}%'.format(tick * 100) for tick in y_ticks])
+            '{:3.1f}%'.format(tick * 100.0) for tick in y_ticks])
 
         return bar_plot
 
-    def get_dollar_change_bar_plot(self, offset):
+    def plot_dollar_change_bars(self, offset):
         returns = ((self._daily['adj_close'].iloc[-1, :] - (
             self._daily['adj_close'].iloc[-(offset + 1), :])) / (
                 self._daily['adj_close'].iloc[-(offset + 1), :])).sort_index()
@@ -102,6 +102,25 @@ class PortfolioReport(object):
 
         return bar_plot
 
+    def plot_percent_return_lines(self):
+        returns = self._daily['adj_close'] / (
+            self._daily['adj_close'].ix[0, :]) - 1.0
+        
+        line_plot = returns.plot(kind='line', ax=plt.gca())
+        line_plot.set_title('Change %\n')
+        y_ticks = line_plot.get_yticks()
+        line_plot.set_yticklabels([
+            '{:3.1f}%'.format(tick * 100.0) for tick in y_ticks])
+
+        # Draw legend outside plot and shrink axes area to fit.
+        line_plot.legend(loc='center right', bbox_to_anchor=(
+            1.2, .5), frameon=False)
+        box = plt.gca().get_position()
+        plt.gca().set_position([box.x0, box.y0,
+                                box.width * .9, box.height])
+
+        return line_plot
+
     def get_report(self):
         """Creates the entire report.
         """
@@ -111,9 +130,11 @@ class PortfolioReport(object):
 
         plt.style.use('ggplot')
         plt.figure()
-        self.get_percent_change_bar_plot(1)
+        self.plot_percent_change_bars(1)
         plt.figure()
-        self.get_dollar_change_bar_plot(1)
+        self.plot_dollar_change_bars(1)
+        plt.figure()
+        self.plot_percent_return_lines()
         plt.show()
 
         return {'subject': subject, 'body': body}
