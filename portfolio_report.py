@@ -29,6 +29,7 @@ Example:
     }, daily).get_report()
 """
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -68,6 +69,12 @@ class PortfolioReport(object):
         return colors
 
     @staticmethod
+    def _format_x_ticks_as_dates(plot):
+        plot.xaxis.set_major_formatter(mpl.dates.DateFormatter('%Y-%m-%d'))
+        plot.set_xlabel('')
+        return plot
+
+    @staticmethod
     def _format_y_ticks_as_percents(plot):
         y_ticks = plot.get_yticks()
         plot.set_yticklabels([
@@ -89,6 +96,17 @@ class PortfolioReport(object):
             plot.text(rect.get_x() + rect.get_width() * .5, height, (
                 label), ha='center', va=vert_align, color=text_color)
         return plot
+
+    @staticmethod
+    def _format_legend(plot, text_color):
+        # Draw legend outside plot and shrink axes area to fit.
+        legend = plot.legend(loc='center right', fontsize=10.0, bbox_to_anchor=(
+            1.2, .5), frameon=False)
+        for text in legend.get_texts():
+            text.set_color(text_color)
+        box = plt.gca().get_position()
+        plt.gca().set_position([box.x0, box.y0,
+                                box.width * .9, box.height])
 
     def plot_dollar_change_bars(self):
         percent_returns = self._get_returns(1)
@@ -116,15 +134,8 @@ class PortfolioReport(object):
         plot = returns.plot(kind='line', ax=plt.gca())
         self._format_y_ticks_as_percents(plot)
         plot.set_title('Change %\n', color=self._TEXT_COLOR)
-
-        # Draw legend outside plot and shrink axes area to fit.
-        legend = plot.legend(loc='center right', bbox_to_anchor=(
-            1.2, .5), frameon=False)
-        for text in legend.get_texts():
-            text.set_color(self._TEXT_COLOR)
-        box = plt.gca().get_position()
-        plt.gca().set_position([box.x0, box.y0,
-                                box.width * .9, box.height])
+        self._format_x_ticks_as_dates(plot)
+        self._format_legend(plot, self._TEXT_COLOR)
 
         return plot
 
