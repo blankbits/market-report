@@ -90,17 +90,8 @@ class PortfolioReport(object):
                 label), ha='center', va=vert_align, color=text_color)
         return plot
 
-    def plot_percent_change_bars(self, offset):
-        returns = self._get_returns(offset)
-        colors = self._get_gain_loss_colors(returns)
-        plot = returns.plot(kind='bar', color=colors)
-        self._format_y_ticks_as_percents(plot)
-        plot.set_title(
-            '{:d} Day Change %\n'.format(offset), color=self._TEXT_COLOR)
-        return plot
-
-    def plot_dollar_change_bars(self, offset):
-        percent_returns = self._get_returns(offset)
+    def plot_dollar_change_bars(self):
+        percent_returns = self._get_returns(1)
         colors = self._get_gain_loss_colors(percent_returns)
 
         # Use most recent portfolio from config to convert to dollar returns.
@@ -108,12 +99,12 @@ class PortfolioReport(object):
         portfolio = self._config['dates'][max(self._config['dates'], key=int)]
         for i in dollar_returns.index:
             dollar_returns[str(i)] *= self._daily['adj_close'].ix[
-                -(offset + 1), str(i)] * (portfolio['symbols'][str(i)])
+                -2, str(i)] * (portfolio['symbols'][str(i)])
 
         plot = dollar_returns.plot(kind='bar', color=colors)
         self._format_y_ticks_as_dollars(plot)
-        plot.set_title('{:d} Day Change | ${:,.2f}\n'.format(
-            offset, np.sum(dollar_returns)), color=self._TEXT_COLOR)
+        plot.set_title('1 Day Change | ${:,.2f}\n'.format(
+            np.sum(dollar_returns)), color=self._TEXT_COLOR)
         labels = ['{:3.1f}%'.format(x * 100.0) for x in percent_returns]
         self._add_bar_labels(plot, labels, self._TEXT_COLOR)
         return plot
@@ -146,11 +137,9 @@ class PortfolioReport(object):
 
         plt.style.use(self._STYLE_SHEET)
         plt.figure()
-        self.plot_percent_change_bars(1)
+        self.plot_dollar_change_bars()
         plt.figure()
         self.plot_percent_return_lines()
-        plt.figure()
-        self.plot_dollar_change_bars(1)
         plt.show()
 
         return {'subject': subject, 'body': body}
