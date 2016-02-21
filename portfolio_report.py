@@ -95,7 +95,8 @@ class PortfolioReport(object):
         colors = self._get_gain_loss_colors(returns)
         plot = returns.plot(kind='bar', color=colors)
         self._format_y_ticks_as_percents(plot)
-        plot.set_title('{:d} Day Change %\n'.format(offset))
+        plot.set_title(
+            '{:d} Day Change %\n'.format(offset), color=self._TEXT_COLOR)
         return plot
 
     def plot_dollar_change_bars(self, offset):
@@ -113,17 +114,8 @@ class PortfolioReport(object):
         self._format_y_ticks_as_dollars(plot)
         plot.set_title('{:d} Day Change | ${:,.2f}\n'.format(
             offset, np.sum(dollar_returns)), color=self._TEXT_COLOR)
-
-        # Now make some labels.
         labels = ['{:3.1f}%'.format(x * 100.0) for x in percent_returns]
         self._add_bar_labels(plot, labels, self._TEXT_COLOR)
-        # rects = plot.patches
-        # for rect, label in zip(rects, labels):
-        #     height = rect.get_height() * (-1.0 if rect.get_y() < 0 else 1.0)
-        #     vert_align = 'top' if rect.get_y() < 0 else 'bottom'
-        #     plot.text(rect.get_x() + rect.get_width() * .5, height, (
-        #         label), ha='center', va=vert_align, color=self._TEXT_COLOR)
-
         return plot
 
     def plot_percent_return_lines(self):
@@ -132,11 +124,13 @@ class PortfolioReport(object):
 
         plot = returns.plot(kind='line', ax=plt.gca())
         self._format_y_ticks_as_percents(plot)
-        plot.set_title('Change %\n')
+        plot.set_title('Change %\n', color=self._TEXT_COLOR)
 
         # Draw legend outside plot and shrink axes area to fit.
-        plot.legend(loc='center right', bbox_to_anchor=(
+        legend = plot.legend(loc='center right', bbox_to_anchor=(
             1.2, .5), frameon=False)
+        for text in legend.get_texts():
+            text.set_color(self._TEXT_COLOR)
         box = plt.gca().get_position()
         plt.gca().set_position([box.x0, box.y0,
                                 box.width * .9, box.height])
@@ -151,10 +145,10 @@ class PortfolioReport(object):
         body = ''
 
         plt.style.use(self._STYLE_SHEET)
-        #plt.figure()
-        #self.plot_percent_change_bars(1)
-        #plt.figure()
-        #self.plot_percent_return_lines()
+        plt.figure()
+        self.plot_percent_change_bars(1)
+        plt.figure()
+        self.plot_percent_return_lines()
         plt.figure()
         self.plot_dollar_change_bars(1)
         plt.show()
