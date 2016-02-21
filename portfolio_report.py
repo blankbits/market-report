@@ -29,14 +29,15 @@ Example:
     }, daily).get_report()
 """
 
-import sys
-
 import matplotlib.pyplot as plt
 import numpy as np
 
 class PortfolioReport(object):
     """Contains all functionality for the portfolio_report module.
     """
+    _STYLE_SHEET = 'ggplot'
+    _TEXT_COLOR = (.3, .3, .3, 1.0)
+
     def __init__(self, portfolio_report_config, daily):
         """PortfolioReport must be initialized with args similar to those shown
         in the example at the top of this file.
@@ -50,76 +51,97 @@ class PortfolioReport(object):
         self._config = portfolio_report_config
         self._daily = daily
 
-    def plot_percent_change_bars(self, offset):
-        returns = ((self._daily['adj_close'].iloc[-1, :] - (
+    def _get_returns(self, offset):
+        return ((self._daily['adj_close'].iloc[-1, :] - (
             self._daily['adj_close'].iloc[-(offset + 1), :])) / (
                 self._daily['adj_close'].iloc[-(offset + 1), :])).sort_index()
-        max_abs_return = max(np.abs(returns))
 
+    @staticmethod
+    def _get_gain_loss_colors(returns):
         # Color gains green, losses red, and adjust color by magnitude.
-        colors = [(0.0, 0.0, 0.0)] * len(returns)
+        max_abs_return = max(np.abs(returns))
+        colors = [(0.0, 0.0, 0.0, 0.0)] * len(returns)
         for i, item in enumerate(returns):
             intensity = .75 * (1.0 - (abs(item) / max_abs_return))
             colors[i] = (1.0, intensity, intensity, .67) if item < 0 else (
                 intensity, 1.0, intensity, .67)
+        return colors
 
-        # Create the plot and format y ticks as percents.
-        bar_plot = returns.plot(kind='bar', color=colors)
-        bar_plot.set_title('{:d} Day Change %\n'.format(offset))
-        y_ticks = bar_plot.get_yticks()
-        bar_plot.set_yticklabels([
+    @staticmethod
+    def _format_y_ticks_as_percents(plot):
+        y_ticks = plot.get_yticks()
+        plot.set_yticklabels([
             '{:3.1f}%'.format(tick * 100.0) for tick in y_ticks])
+        return plot
 
-        return bar_plot
+    @staticmethod
+    def _format_y_ticks_as_dollars(plot):
+        y_ticks = plot.get_yticks()
+        plot.set_yticklabels(['${:,.0f}'.format(tick) for tick in y_ticks])
+        return plot
+
+    @staticmethod
+    def _add_bar_labels(plot, labels, text_color):
+        rects = plot.patches
+        for rect, label in zip(rects, labels):
+            height = rect.get_height() * (-1.0 if rect.get_y() < 0 else 1.0)
+            vert_align = 'top' if rect.get_y() < 0 else 'bottom'
+            plot.text(rect.get_x() + rect.get_width() * .5, height, (
+                label), ha='center', va=vert_align, color=text_color)
+        return plot
+
+    def plot_percent_change_bars(self, offset):
+        returns = self._get_returns(offset)
+        colors = self._get_gain_loss_colors(returns)
+        plot = returns.plot(kind='bar', color=colors)
+        self._format_y_ticks_as_percents(plot)
+        plot.set_title('{:d} Day Change %\n'.format(offset))
+        return plot
 
     def plot_dollar_change_bars(self, offset):
-        returns = ((self._daily['adj_close'].iloc[-1, :] - (
-            self._daily['adj_close'].iloc[-(offset + 1), :])) / (
-                self._daily['adj_close'].iloc[-(offset + 1), :])).sort_index()
+        percent_returns = self._get_returns(offset)
+        colors = self._get_gain_loss_colors(percent_returns)
 
         # Use most recent portfolio from config to convert to dollar returns.
+        dollar_returns = percent_returns * self._config['value_ratio']
         portfolio = self._config['dates'][max(self._config['dates'], key=int)]
-        for i in returns.index:
-            returns[str(i)] *= self._daily['adj_close'].ix[
+        for i in dollar_returns.index:
+            dollar_returns[str(i)] *= self._daily['adj_close'].ix[
                 -(offset + 1), str(i)] * (portfolio['symbols'][str(i)])
 
-        returns *= self._config['value_ratio']
-        max_abs_return = max(np.abs(returns))
+        plot = dollar_returns.plot(kind='bar', color=colors)
+        self._format_y_ticks_as_dollars(plot)
+        plot.set_title('{:d} Day Change | ${:,.2f}\n'.format(
+            offset, np.sum(dollar_returns)), color=self._TEXT_COLOR)
 
-        # Color gains green, losses red, and adjust color by magnitude.
-        colors = [(0.0, 0.0, 0.0)] * len(returns)
-        for i, item in enumerate(returns):
-            intensity = .75 * (1.0 - (abs(item) / max_abs_return))
-            colors[i] = (1.0, intensity, intensity, .67) if item < 0 else (
-                intensity, 1.0, intensity, .67)
+        # Now make some labels.
+        labels = ['{:3.1f}%'.format(x * 100.0) for x in percent_returns]
+        self._add_bar_labels(plot, labels, self._TEXT_COLOR)
+        # rects = plot.patches
+        # for rect, label in zip(rects, labels):
+        #     height = rect.get_height() * (-1.0 if rect.get_y() < 0 else 1.0)
+        #     vert_align = 'top' if rect.get_y() < 0 else 'bottom'
+        #     plot.text(rect.get_x() + rect.get_width() * .5, height, (
+        #         label), ha='center', va=vert_align, color=self._TEXT_COLOR)
 
-        # Create the plot and format y ticks as percents.
-        bar_plot = returns.plot(kind='bar', color=colors)
-        bar_plot.set_title('{:d} Day Change | ${:,.2f}\n'.format(
-            offset, np.sum(returns)))
-        y_ticks = bar_plot.get_yticks()
-        bar_plot.set_yticklabels(['${:,.0f}'.format(tick) for tick in y_ticks])
-
-        return bar_plot
+        return plot
 
     def plot_percent_return_lines(self):
         returns = self._daily['adj_close'] / (
             self._daily['adj_close'].ix[0, :]) - 1.0
-        
-        line_plot = returns.plot(kind='line', ax=plt.gca())
-        line_plot.set_title('Change %\n')
-        y_ticks = line_plot.get_yticks()
-        line_plot.set_yticklabels([
-            '{:3.1f}%'.format(tick * 100.0) for tick in y_ticks])
+
+        plot = returns.plot(kind='line', ax=plt.gca())
+        self._format_y_ticks_as_percents(plot)
+        plot.set_title('Change %\n')
 
         # Draw legend outside plot and shrink axes area to fit.
-        line_plot.legend(loc='center right', bbox_to_anchor=(
+        plot.legend(loc='center right', bbox_to_anchor=(
             1.2, .5), frameon=False)
         box = plt.gca().get_position()
         plt.gca().set_position([box.x0, box.y0,
                                 box.width * .9, box.height])
 
-        return line_plot
+        return plot
 
     def get_report(self):
         """Creates the entire report.
@@ -128,13 +150,13 @@ class PortfolioReport(object):
             self._daily['adj_close'].index[-1].date())
         body = ''
 
-        plt.style.use('ggplot')
-        plt.figure()
-        self.plot_percent_change_bars(1)
+        plt.style.use(self._STYLE_SHEET)
+        #plt.figure()
+        #self.plot_percent_change_bars(1)
+        #plt.figure()
+        #self.plot_percent_return_lines()
         plt.figure()
         self.plot_dollar_change_bars(1)
-        plt.figure()
-        self.plot_percent_return_lines()
         plt.show()
 
         return {'subject': subject, 'body': body}
