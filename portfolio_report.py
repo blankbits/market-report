@@ -88,16 +88,6 @@ class PortfolioReport(object):
         return plot
 
     @staticmethod
-    def _add_bar_labels(plot, labels, text_color):
-        rects = plot.patches
-        for rect, label in zip(rects, labels):
-            height = rect.get_height() * (-1.0 if rect.get_y() < 0 else 1.0)
-            vert_align = 'top' if rect.get_y() < 0 else 'bottom'
-            plot.text(rect.get_x() + rect.get_width() * .5, height, (
-                label), ha='center', va=vert_align, color=text_color)
-        return plot
-
-    @staticmethod
     def _format_legend(plot, text_color):
         # Draw legend outside plot and shrink axes area to fit.
         legend = plot.legend(loc='center right', fontsize=10.0, bbox_to_anchor=(
@@ -107,6 +97,16 @@ class PortfolioReport(object):
         box = plt.gca().get_position()
         plt.gca().set_position([box.x0, box.y0,
                                 box.width * .9, box.height])
+        return plot
+
+    @staticmethod
+    def _add_bar_labels(plot, labels, text_color):
+        rects = plot.patches
+        for rect, label in zip(rects, labels):
+            height = rect.get_height() * (-1.0 if rect.get_y() < 0 else 1.0)
+            vert_align = 'top' if rect.get_y() < 0 else 'bottom'
+            plot.text(rect.get_x() + rect.get_width() * .5, height, (
+                label), ha='center', va=vert_align, color=text_color)
         return plot
 
     def plot_dollar_change_bars(self):
@@ -121,9 +121,9 @@ class PortfolioReport(object):
                 -2, str(i)] * (portfolio['symbols'][str(i)])
 
         plot = dollar_returns.plot(kind='bar', color=colors)
-        self._format_y_ticks_as_dollars(plot)
         plot.set_title('1 Day Change | ${:,.2f}\n'.format(
             np.sum(dollar_returns)), color=self._TEXT_COLOR)
+        self._format_y_ticks_as_dollars(plot)
         labels = ['{:3.1f}%'.format(x * 100.0) for x in percent_returns]
         self._add_bar_labels(plot, labels, self._TEXT_COLOR)
         return plot
@@ -133,28 +133,30 @@ class PortfolioReport(object):
             self._daily['adj_close'].ix[0, :]) - 1.0
 
         plot = returns.plot(kind='line', ax=plt.gca())
-        self._format_y_ticks_as_percents(plot)
         plot.set_title('Change %\n', color=self._TEXT_COLOR)
         self._format_x_ticks_as_dates(plot)
+        self._format_y_ticks_as_percents(plot)
         self._format_legend(plot, self._TEXT_COLOR)
 
         return plot
 
-    def plot_dollar_value_pie(self):
+    def plot_dollar_value_bars(self):
         # Use most recent portfolio from config to convert to get dollar values.
         dollar_values = self._daily['close'].ix[-1, :] * (
             self._config['value_ratio'])
         portfolio = self._config['dates'][max(self._config['dates'], key=int)]
         for i in dollar_values.index:
             dollar_values[str(i)] *= portfolio['symbols'][str(i)]
+        percents = dollar_values / np.sum(dollar_values)
 
-        print portfolio
-        print self._daily['close'].ix[-1, :]
-        print dollar_values
-        plot = dollar_values.plot(kind='pie', autopct='%1.1f%%')
-        plot.axis('equal')
+        plot = dollar_values.plot(kind='bar', alpha=.67)
+        plot.set_title('\$ Value | ${:,.2f}\n'.format(
+            np.sum(dollar_values)), color=self._TEXT_COLOR)
+        self._format_y_ticks_as_dollars(plot)
+        labels = ['{:3.1f}%'.format(x * 100.0) for x in percents]
+        self._add_bar_labels(plot, labels, self._TEXT_COLOR)
         return plot
-
+    
     def get_report(self):
         """Creates the entire report.
         """
@@ -168,7 +170,7 @@ class PortfolioReport(object):
         plt.figure()
         self.plot_percent_return_lines()
         plt.figure()
-        self.plot_dollar_value_pie()
+        self.plot_dollar_value_bars()
         plt.show()
 
         return {'subject': subject, 'body': body}
