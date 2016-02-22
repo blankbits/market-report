@@ -107,6 +107,7 @@ class PortfolioReport(object):
         box = plt.gca().get_position()
         plt.gca().set_position([box.x0, box.y0,
                                 box.width * .9, box.height])
+        return plot
 
     def plot_dollar_change_bars(self):
         percent_returns = self._get_returns(1)
@@ -139,6 +140,21 @@ class PortfolioReport(object):
 
         return plot
 
+    def plot_dollar_value_pie(self):
+        # Use most recent portfolio from config to convert to get dollar values.
+        dollar_values = self._daily['close'].ix[-1, :] * (
+            self._config['value_ratio'])
+        portfolio = self._config['dates'][max(self._config['dates'], key=int)]
+        for i in dollar_values.index:
+            dollar_values[str(i)] *= portfolio['symbols'][str(i)]
+
+        print portfolio
+        print self._daily['close'].ix[-1, :]
+        print dollar_values
+        plot = dollar_values.plot(kind='pie', autopct='%1.1f%%')
+        plot.axis('equal')
+        return plot
+
     def get_report(self):
         """Creates the entire report.
         """
@@ -151,6 +167,8 @@ class PortfolioReport(object):
         self.plot_dollar_change_bars()
         plt.figure()
         self.plot_percent_return_lines()
+        plt.figure()
+        self.plot_dollar_value_pie()
         plt.show()
 
         return {'subject': subject, 'body': body}

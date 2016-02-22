@@ -135,11 +135,16 @@ class HistoricalData(object):
         # Validate dataframes.
         self._logger.info('Validating dataframes')
         end_date = pd.to_datetime(self._config['end_date'])
-        if daily['adj_close'].index.max() != end_date or (
+        if daily['close'].index.max() != end_date or (
+                daily['adj_close'].index.max() != end_date) or (
                 daily['volume'].index.max() != end_date):
             self._logger.error('End date mismatch')
             is_valid = False
-        if np.any(daily['adj_close'].isnull()):
+        if np.any(daily['close'].isnull()) or np.any(
+                daily['adj_close'].isnull()):
+            columns = daily['close'].columns[
+                daily['close'].isnull().any(axis=0)].values
+            drop_columns.extend(columns)
             columns = daily['adj_close'].columns[
                 daily['adj_close'].isnull().any(axis=0)].values
             drop_columns.extend(columns)
@@ -171,6 +176,7 @@ class HistoricalData(object):
                 daily['volume'].drop(drop_columns, axis=1, inplace=True)
 
         # Sort rows by datetime in ascending order.
+        daily['close'].sort_index(inplace=True)
         daily['adj_close'].sort_index(inplace=True)
         daily['volume'].sort_index(inplace=True)
 
