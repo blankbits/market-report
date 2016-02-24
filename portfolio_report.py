@@ -32,6 +32,7 @@ Example:
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 class PortfolioReport(object):
     """Contains all functionality for the portfolio_report module.
@@ -56,6 +57,29 @@ class PortfolioReport(object):
         return ((self._daily['adj_close'].iloc[-1, :] - (
             self._daily['adj_close'].iloc[-(offset + 1), :])) / (
                 self._daily['adj_close'].iloc[-(offset + 1), :])).sort_index()
+
+    def _get_dollar_values(self):
+        dates = sorted(self._config['dates'])
+        # Copy dataframe and discard data before earliest portfolio date.
+        dollar_values = self._daily['close'].ix[
+            self._daily['close'].index >= pd.to_datetime(
+                str(dates[0])), :].copy()
+
+        # Loop thru dates and calculate each date range using bitmask index.
+        for i, item in enumerate(dates):
+            index = dollar_values.index >= pd.to_datetime(str(item))
+            if i < (len(dates) - 1):
+                index = index & (
+                    dollar_values.index < pd.to_datetime(str(dates[i + 1])))
+            for key in list(dollar_values.columns.values):
+                value = self._config['dates'][item]['symbols'].get(key)
+                if value is None:
+                    dollar_values.ix[index, key] = 0.0
+                else:
+                    dollar_values.ix[index, key] *= value * self._config[
+                        'value_ratio']
+
+        return dollar_values
 
     @staticmethod
     def _get_gain_loss_colors(returns):
@@ -94,6 +118,7 @@ class PortfolioReport(object):
             1.2, .5), frameon=False)
         for text in legend.get_texts():
             text.set_color(text_color)
+
         box = plt.gca().get_position()
         plt.gca().set_position([box.x0, box.y0,
                                 box.width * .9, box.height])
@@ -141,12 +166,7 @@ class PortfolioReport(object):
         return plot
 
     def plot_dollar_value_bars(self):
-        # Use most recent portfolio from config to convert to get dollar values.
-        dollar_values = self._daily['close'].ix[-1, :] * (
-            self._config['value_ratio'])
-        portfolio = self._config['dates'][max(self._config['dates'], key=int)]
-        for i in dollar_values.index:
-            dollar_values[str(i)] *= portfolio['symbols'][str(i)]
+        dollar_values = self._get_dollar_values().ix[-1, :]
         percents = dollar_values / np.sum(dollar_values)
 
         plot = dollar_values.plot(kind='bar', alpha=.67)
@@ -156,7 +176,7 @@ class PortfolioReport(object):
         labels = ['{:3.1f}%'.format(x * 100.0) for x in percents]
         self._add_bar_labels(plot, labels, self._TEXT_COLOR)
         return plot
-    
+
     def get_report(self):
         """Creates the entire report.
         """
@@ -172,5 +192,6 @@ class PortfolioReport(object):
         plt.figure()
         self.plot_dollar_value_bars()
         plt.show()
+        print self._get_dollar_values()
 
         return {'subject': subject, 'body': body}
