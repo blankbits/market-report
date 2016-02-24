@@ -60,10 +60,10 @@ class PortfolioReport(object):
 
     def _get_dollar_values(self):
         dates = sorted(self._config['dates'])
-        # Copy dataframe and discard data before earliest portfolio date.
-        dollar_values = self._daily['close'].ix[
-            self._daily['close'].index >= pd.to_datetime(
-                str(dates[0])), :].copy()
+        # Copy dataframe and zero data before earliest portfolio date.
+        dollar_values = self._daily['close'].copy()
+        dollar_values.ix[
+            dollar_values.index < pd.to_datetime(str(dates[0])), :] = 0.0
 
         # Loop thru dates and calculate each date range using bitmask index.
         for i, item in enumerate(dates):
@@ -177,6 +177,17 @@ class PortfolioReport(object):
         self._add_bar_labels(plot, labels, self._TEXT_COLOR)
         return plot
 
+    def plot_dollar_value_lines(self):
+        dollar_values = self._get_dollar_values()
+        dollar_values['- TOTAL -'] = dollar_values.sum(1)
+
+        plot = dollar_values.plot(kind='line', ax=plt.gca())
+        plot.set_title('\$ Value', color=self._TEXT_COLOR)
+        self._format_x_ticks_as_dates(plot)
+        self._format_y_ticks_as_dollars(plot)
+        self._format_legend(plot, self._TEXT_COLOR)
+        return plot
+
     def get_report(self):
         """Creates the entire report.
         """
@@ -191,7 +202,8 @@ class PortfolioReport(object):
         self.plot_percent_return_lines()
         plt.figure()
         self.plot_dollar_value_bars()
+        plt.figure()
+        self.plot_dollar_value_lines()
         plt.show()
-        print self._get_dollar_values()
 
         return {'subject': subject, 'body': body}
