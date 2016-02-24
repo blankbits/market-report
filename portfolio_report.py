@@ -81,9 +81,28 @@ class PortfolioReport(object):
 
         return dollar_values
 
+    def _get_profit_and_loss(self):
+        profit_and_loss = self._get_dollar_values().sum(1).diff()
+        dates = sorted(self._config['dates'])
+
+        # Correct NaN and spike on first portfolio date caused by diff().
+        first_date = np.argmax(
+            profit_and_loss.index >= pd.to_datetime(str(dates[0])))
+        profit_and_loss.ix[0] = 0.0
+        profit_and_loss.ix[first_date] = 0.0
+
+        # Adjust for capital changes.
+        for i, item in enumerate(dates):
+            index = np.argmax(
+                profit_and_loss.index >= pd.to_datetime(str(item)))
+            profit_and_loss.ix[index] -= self._config[
+                'dates'][item]['capital_change'] * self._config['value_ratio']
+
+        return profit_and_loss
+
     @staticmethod
-    def _get_gain_loss_colors(returns):
-        # Color gains green, losses red, and adjust color by magnitude.
+    def _get_return_colors(returns):
+        # Color winners green, losers red, and adjust color by magnitude.
         max_abs_return = max(np.abs(returns))
         colors = [(0.0, 0.0, 0.0, 0.0)] * len(returns)
         for i, item in enumerate(returns):
@@ -136,7 +155,7 @@ class PortfolioReport(object):
 
     def plot_dollar_change_bars(self):
         percent_returns = self._get_returns(1)
-        colors = self._get_gain_loss_colors(percent_returns)
+        colors = self._get_return_colors(percent_returns)
 
         # Use most recent portfolio from config to convert to dollar returns.
         dollar_returns = percent_returns * self._config['value_ratio']
@@ -179,13 +198,23 @@ class PortfolioReport(object):
 
     def plot_dollar_value_lines(self):
         dollar_values = self._get_dollar_values()
-        dollar_values['- TOTAL -'] = dollar_values.sum(1)
+        dollar_values['TOTAL'] = dollar_values.sum(1)
 
         plot = dollar_values.plot(kind='line', ax=plt.gca())
-        plot.set_title('\$ Value', color=self._TEXT_COLOR)
+        plot.set_title('\$ Value\n', color=self._TEXT_COLOR)
         self._format_x_ticks_as_dates(plot)
         self._format_y_ticks_as_dollars(plot)
         self._format_legend(plot, self._TEXT_COLOR)
+        return plot
+
+    def plot_profit_and_loss_lines(self):
+        profit_and_loss = self._get_profit_and_loss()
+
+        plot = profit_and_loss.plot(kind='line', ax=plt.gca())
+        plot.set_title('Profit and Loss\n', color=self._TEXT_COLOR)
+        self._format_x_ticks_as_dates(plot)
+        self._format_y_ticks_as_dollars(plot)
+        #self._format_legend(plot, self._TEXT_COLOR)
         return plot
 
     def get_report(self):
@@ -204,6 +233,8 @@ class PortfolioReport(object):
         self.plot_dollar_value_bars()
         plt.figure()
         self.plot_dollar_value_lines()
+        plt.figure()
+        self.plot_profit_and_loss_lines()
         plt.show()
 
         return {'subject': subject, 'body': body}
