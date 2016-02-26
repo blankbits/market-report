@@ -82,21 +82,21 @@ class PortfolioReport(object):
         return dollar_values
 
     def _get_profit_and_loss(self):
-        profit_and_loss = self._get_dollar_values().sum(1).diff()
+        profit_and_loss = self._get_dollar_values().sum(1)
         dates = sorted(self._config['dates'])
 
-        # Correct NaN and spike on first portfolio date caused by diff().
+        # Correct spike on first portfolio date.
         first_date = np.argmax(
             profit_and_loss.index >= pd.to_datetime(str(dates[0])))
-        profit_and_loss.ix[0] = 0.0
-        profit_and_loss.ix[first_date] = 0.0
+        profit_and_loss.ix[first_date:] -= profit_and_loss.ix[first_date]
 
         # Adjust for capital changes.
         for i, item in enumerate(dates):
-            index = np.argmax(
-                profit_and_loss.index >= pd.to_datetime(str(item)))
-            profit_and_loss.ix[index] -= self._config[
-                'dates'][item]['capital_change'] * self._config['value_ratio']
+            if i > 0:
+                index = profit_and_loss.index >= pd.to_datetime(str(item))
+                profit_and_loss.ix[index] -= self._config[
+                    'dates'][item]['capital_change'] * self._config[
+                        'value_ratio']
 
         return profit_and_loss
 
@@ -211,7 +211,8 @@ class PortfolioReport(object):
         profit_and_loss = self._get_profit_and_loss()
 
         plot = profit_and_loss.plot(kind='line', ax=plt.gca())
-        plot.set_title('Profit and Loss\n', color=self._TEXT_COLOR)
+        plot.set_title('Cumulative P&L | ${:,.2f}\n'.format(
+            profit_and_loss[-1]), color=self._TEXT_COLOR)
         self._format_x_ticks_as_dates(plot)
         self._format_y_ticks_as_dollars(plot)
         #self._format_legend(plot, self._TEXT_COLOR)
