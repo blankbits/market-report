@@ -153,18 +153,38 @@ class PortfolioReport(object):
                 label), ha='center', va=vert_align, color=text_color)
         return plot
 
-    def plot_dollar_change_bars(self):
+    def plot_dollar_change_bars(self, group=False):
         percent_returns = self._get_returns(1)
-        colors = self._get_return_colors(percent_returns)
 
-        # Use most recent portfolio from config to convert to dollar returns.
-        dollar_returns = percent_returns * self._config['value_ratio']
+        # Use most recent portfolio from config.
         portfolio = self._config['dates'][max(self._config['dates'], key=int)]
+
+        # Convert to dollar returns.
+        dollar_returns = percent_returns * self._config['value_ratio']
         for i in dollar_returns.index:
             dollar_returns[str(i)] *= self._daily['adj_close'].ix[
                 -2, str(i)] * (portfolio['symbols'][str(i)])
 
-        plot = dollar_returns.plot(kind='bar', color=colors)
+        # Optionally group returns using symbol_groups in config.
+        if group is True:
+            group_dollar_returns = pd.Series()
+            group_percent_returns = pd.Series()
+            for key, value in self._config['symbol_groups'].iteritems():
+                group_dollar_returns[key] = dollar_returns[value].sum()
+                group_percent_returns[key] = 0.0
+                for symbol in value:
+                    group_percent_returns[key] += self._daily['adj_close'].ix[
+                        -2, symbol] * portfolio['symbols'][symbol]
+
+                group_percent_returns[key] = group_dollar_returns[key] / (
+                    group_percent_returns[key] * self._config['value_ratio'])
+
+            dollar_returns = group_dollar_returns
+            percent_returns = group_percent_returns
+
+        # Create plot.
+        plot = dollar_returns.plot(kind='bar', color=self._get_return_colors(
+            percent_returns))
         plot.set_title('1 Day Change | ${:,.2f}\n'.format(
             np.sum(dollar_returns)), color=self._TEXT_COLOR)
         self._format_y_ticks_as_dollars(plot)
@@ -215,7 +235,6 @@ class PortfolioReport(object):
             profit_and_loss[-1]), color=self._TEXT_COLOR)
         self._format_x_ticks_as_dates(plot)
         self._format_y_ticks_as_dollars(plot)
-        #self._format_legend(plot, self._TEXT_COLOR)
         return plot
 
     def get_report(self):
@@ -229,6 +248,8 @@ class PortfolioReport(object):
         plt.figure()
         self.plot_dollar_change_bars()
         plt.figure()
+        self.plot_dollar_change_bars(group=True)
+        plt.figure()
         self.plot_percent_return_lines()
         plt.figure()
         self.plot_dollar_value_bars()
@@ -237,5 +258,7 @@ class PortfolioReport(object):
         plt.figure()
         self.plot_profit_and_loss_lines()
         plt.show()
+
+        print self._config['symbol_groups']
 
         return {'subject': subject, 'body': body}
