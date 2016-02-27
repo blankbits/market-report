@@ -58,7 +58,7 @@ class PortfolioReport(object):
             self._daily['adj_close'].iloc[-(offset + 1), :])) / (
                 self._daily['adj_close'].iloc[-(offset + 1), :])).sort_index()
 
-    def _get_dollar_values(self):
+    def _get_dollar_values(self, group=False):
         dates = sorted(self._config['dates'])
         # Copy dataframe and zero data before earliest portfolio date.
         dollar_values = self._daily['close'].copy()
@@ -78,6 +78,14 @@ class PortfolioReport(object):
                 else:
                     dollar_values.ix[index, key] *= value * self._config[
                         'value_ratio']
+
+        # Optionally group using symbol_groups in config.
+        if group is True:
+            group_dollar_values = pd.DataFrame()
+            for key, value in self._config['symbol_groups'].iteritems():
+                group_dollar_values[key] = dollar_values[value].sum(1)
+
+            dollar_values = group_dollar_values
 
         return dollar_values
 
@@ -204,8 +212,8 @@ class PortfolioReport(object):
 
         return plot
 
-    def plot_dollar_value_bars(self):
-        dollar_values = self._get_dollar_values().ix[-1, :]
+    def plot_dollar_value_bars(self, group=False):
+        dollar_values = self._get_dollar_values(group).ix[-1, :]
         percents = dollar_values / np.sum(dollar_values)
 
         plot = dollar_values.plot(kind='bar', alpha=.67)
@@ -248,11 +256,13 @@ class PortfolioReport(object):
         plt.figure()
         self.plot_dollar_change_bars()
         plt.figure()
-        self.plot_dollar_change_bars(group=True)
+        self.plot_dollar_change_bars(True)
         plt.figure()
         self.plot_percent_return_lines()
         plt.figure()
         self.plot_dollar_value_bars()
+        plt.figure()
+        self.plot_dollar_value_bars(True)
         plt.figure()
         self.plot_dollar_value_lines()
         plt.figure()
