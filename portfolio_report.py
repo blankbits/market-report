@@ -53,10 +53,16 @@ class PortfolioReport(object):
         self._config = portfolio_report_config
         self._daily = daily
 
-    def _get_returns(self, offset):
-        return ((self._daily['adj_close'].iloc[-1, :] - (
-            self._daily['adj_close'].iloc[-(offset + 1), :])) / (
-                self._daily['adj_close'].iloc[-(offset + 1), :])).sort_index()
+    def _get_percent_returns(self, offset=None):
+    # TODO: change to have cumulative flag and use .pct_change().shift().
+    # def _get_percent_returns(self, cumulative=False):
+        if offset is None:
+            # If no offset provided, get returns for entire period.
+            return self._daily['adj_close'] / (
+                self._daily['adj_close'].ix[0, :]) - 1.0
+        else:
+            return self._daily['adj_close'].ix[-1, :] / (
+                self._daily['adj_close'].ix[-(offset + 1), :]) - 1.0
 
     def _get_dollar_values(self, group=False):
         dates = sorted(self._config['dates'])
@@ -88,6 +94,11 @@ class PortfolioReport(object):
             dollar_values = group_dollar_values
 
         return dollar_values
+
+    def _get_dollar_returns(self, group=False):
+        # TODO: implement this.
+        dollar_values = self._get_dollar-values()
+        return None
 
     def _get_profit_and_loss(self):
         profit_and_loss = self._get_dollar_values().sum(1)
@@ -162,7 +173,7 @@ class PortfolioReport(object):
         return plot
 
     def plot_dollar_change_bars(self, group=False):
-        percent_returns = self._get_returns(1)
+        percent_returns = self._get_percent_returns(1)
 
         # Use most recent portfolio from config.
         portfolio = self._config['dates'][max(self._config['dates'], key=int)]
@@ -201,10 +212,11 @@ class PortfolioReport(object):
         return plot
 
     def plot_percent_return_lines(self):
-        returns = self._daily['adj_close'] / (
-            self._daily['adj_close'].ix[0, :]) - 1.0
+        # percent_returns = self._daily['adj_close'] / (
+        #     self._daily['adj_close'].ix[0, :]) - 1.0
+        percent_returns = self._get_percent_returns()
 
-        plot = returns.plot(kind='line', ax=plt.gca())
+        plot = percent_returns.plot(kind='line', ax=plt.gca())
         plot.set_title('Change %\n', color=self._TEXT_COLOR)
         self._format_x_ticks_as_dates(plot)
         self._format_y_ticks_as_percents(plot)
@@ -224,8 +236,8 @@ class PortfolioReport(object):
         self._add_bar_labels(plot, labels, self._TEXT_COLOR)
         return plot
 
-    def plot_dollar_value_lines(self):
-        dollar_values = self._get_dollar_values()
+    def plot_dollar_value_lines(self, group=False):
+        dollar_values = self._get_dollar_values(group)
         dollar_values['TOTAL'] = dollar_values.sum(1)
 
         plot = dollar_values.plot(kind='line', ax=plt.gca())
@@ -258,13 +270,15 @@ class PortfolioReport(object):
         plt.figure()
         self.plot_dollar_change_bars(True)
         plt.figure()
-        self.plot_percent_return_lines()
-        plt.figure()
         self.plot_dollar_value_bars()
         plt.figure()
         self.plot_dollar_value_bars(True)
         plt.figure()
         self.plot_dollar_value_lines()
+        plt.figure()
+        self.plot_dollar_value_lines(True)
+        plt.figure()
+        self.plot_percent_return_lines()
         plt.figure()
         self.plot_profit_and_loss_lines()
         plt.show()
