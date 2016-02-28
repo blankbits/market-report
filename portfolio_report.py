@@ -136,8 +136,8 @@ class PortfolioReport(object):
 
     @staticmethod
     def _format_x_ticks_as_dates(plot):
-        #plot.xaxis.set_major_formatter(mpl.dates.DateFormatter('%Y-%m-%d'))
-        #plot.set_xlabel('')
+        plot.xaxis.set_major_formatter(mpl.dates.DateFormatter('%Y-%m-%d'))
+        plot.get_xaxis().get_label().set_visible(False)
         return plot
 
     @staticmethod
@@ -155,15 +155,10 @@ class PortfolioReport(object):
 
     @staticmethod
     def _format_legend(plot, text_color):
-        # Draw legend outside plot and shrink axes area to fit.
-        legend = plot.legend(loc='center right', fontsize=10.0, bbox_to_anchor=(
-            1.2, .5), frameon=False)
+        legend = plot.legend(loc='upper left', fontsize=11.0, borderaxespad=0)
         for text in legend.get_texts():
             text.set_color(text_color)
 
-        box = plt.gca().get_position()
-        plt.gca().set_position([box.x0, box.y0,
-                                box.width * .9, box.height])
         return plot
 
     @staticmethod
@@ -208,7 +203,7 @@ class PortfolioReport(object):
         percents = dollar_values / np.sum(dollar_values)
 
         plot = dollar_values.plot(kind='bar', alpha=.67)
-        plot.set_title('Portfolio Weights', color=self._TEXT_COLOR)
+        plot.set_title('Portfolio Weights\n', color=self._TEXT_COLOR)
         plot.set_xticklabels(dollar_values.index, rotation=0)
         self._format_y_ticks_as_dollars(plot)
         labels = ['{:3.1f}%'.format(x * 100.0) for x in percents]
@@ -247,20 +242,28 @@ class PortfolioReport(object):
         plt.style.use(self._STYLE_SHEET)
         plt.figure()
         self.plot_dollar_change_bars(True)
+        plt.tight_layout()
         plt.figure()
         self.plot_dollar_change_bars()
+        plt.tight_layout()
         plt.figure()
         self.plot_dollar_value_bars(True)
+        plt.tight_layout()
         plt.figure()
         self.plot_dollar_value_bars()
+        plt.tight_layout()
         plt.figure()
         self.plot_dollar_value_lines(True)
+        plt.tight_layout()
         plt.figure()
         self.plot_dollar_value_lines()
+        plt.tight_layout()
         plt.figure()
         self.plot_profit_and_loss_lines()
+        plt.tight_layout()
         plt.figure()
         self.plot_percent_return_lines()
+        plt.tight_layout()
         plt.show()
 
         return {'subject': subject, 'body': body}
