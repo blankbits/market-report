@@ -34,6 +34,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+import plot_utils
+
 class PortfolioReport(object):
     """Contains all functionality for the portfolio_report module.
     """
@@ -123,53 +125,6 @@ class PortfolioReport(object):
 
         return sum_data_frame
 
-    @staticmethod
-    def _get_return_colors(returns):
-        # Color winners green, losers red, and adjust color by magnitude.
-        max_abs_return = max(np.abs(returns))
-        colors = [(0.0, 0.0, 0.0, 0.0)] * len(returns)
-        for i, item in enumerate(returns):
-            intensity = .75 * (1.0 - (abs(item) / max_abs_return))
-            colors[i] = (1.0, intensity, intensity, .67) if item < 0 else (
-                intensity, 1.0, intensity, .67)
-        return colors
-
-    @staticmethod
-    def _format_x_ticks_as_dates(plot):
-        plot.xaxis.set_major_formatter(mpl.dates.DateFormatter('%Y-%m-%d'))
-        plot.get_xaxis().get_label().set_visible(False)
-        return plot
-
-    @staticmethod
-    def _format_y_ticks_as_percents(plot):
-        y_ticks = plot.get_yticks()
-        plot.set_yticklabels([
-            '{:3.1f}%'.format(tick * 100.0) for tick in y_ticks])
-        return plot
-
-    @staticmethod
-    def _format_y_ticks_as_dollars(plot):
-        y_ticks = plot.get_yticks()
-        plot.set_yticklabels(['${:,.0f}'.format(tick) for tick in y_ticks])
-        return plot
-
-    @staticmethod
-    def _format_legend(plot, text_color):
-        legend = plot.legend(loc='upper left', fontsize=11.0, borderaxespad=0)
-        for text in legend.get_texts():
-            text.set_color(text_color)
-
-        return plot
-
-    @staticmethod
-    def _add_bar_labels(plot, labels, text_color):
-        rects = plot.patches
-        for rect, label in zip(rects, labels):
-            height = rect.get_height() * (-1.0 if rect.get_y() < 0 else 1.0)
-            vert_align = 'top' if rect.get_y() < 0 else 'bottom'
-            plot.text(rect.get_x() + rect.get_width() * .5, height, (
-                label), ha='center', va=vert_align, color=text_color)
-        return plot
 
     def plot_dollar_change_bars(self, group=False):
         dollar_values = self._get_dollar_values(group).ix[-1, :]
@@ -177,14 +132,14 @@ class PortfolioReport(object):
         percent_returns = dollar_returns / dollar_values
         #date_str = dollar_values.name.strftime('%Y-%m-%d')
 
-        plot = dollar_returns.plot(kind='bar', color=self._get_return_colors(
-            percent_returns))
+        plot = dollar_returns.plot(kind='bar', color=(
+            plot_utils.get_conditional_colors(percent_returns, .67)))
         plot.set_title('1-Day Change | ${:,.2f}\n'.format(
             np.sum(dollar_returns)), color=self._TEXT_COLOR)
         plot.set_xticklabels(dollar_returns.index, rotation=0)
-        self._format_y_ticks_as_dollars(plot)
+        plot_utils.format_y_ticks_as_dollars(plot)
         labels = ['{:3.1f}%'.format(x * 100.0) for x in percent_returns]
-        self._add_bar_labels(plot, labels, self._TEXT_COLOR)
+        plot_utils.add_bar_labels(plot, labels, self._TEXT_COLOR)
         return plot
 
     def plot_percent_return_lines(self):
@@ -192,9 +147,9 @@ class PortfolioReport(object):
 
         plot = percent_returns.plot(kind='line', ax=plt.gca())
         plot.set_title('Symbol Returns\n', color=self._TEXT_COLOR)
-        self._format_x_ticks_as_dates(plot)
-        self._format_y_ticks_as_percents(plot)
-        self._format_legend(plot, self._TEXT_COLOR)
+        plot_utils.format_x_ticks_as_dates(plot)
+        plot_utils.format_y_ticks_as_percents(plot)
+        plot_utils.format_legend(plot, self._TEXT_COLOR)
 
         return plot
 
@@ -205,9 +160,9 @@ class PortfolioReport(object):
         plot = dollar_values.plot(kind='bar', alpha=.67)
         plot.set_title('Portfolio Weights\n', color=self._TEXT_COLOR)
         plot.set_xticklabels(dollar_values.index, rotation=0)
-        self._format_y_ticks_as_dollars(plot)
+        plot_utils.format_y_ticks_as_dollars(plot)
         labels = ['{:3.1f}%'.format(x * 100.0) for x in percents]
-        self._add_bar_labels(plot, labels, self._TEXT_COLOR)
+        plot_utils.add_bar_labels(plot, labels, self._TEXT_COLOR)
         return plot
 
     def plot_dollar_value_lines(self, group=False):
@@ -217,9 +172,9 @@ class PortfolioReport(object):
         plot = dollar_values.plot(kind='line', ax=plt.gca())
         plot.set_title('Portfolio Value | ${:,.2f}\n'.format(
             dollar_values['TOTAL'].ix[-1]), color=self._TEXT_COLOR)
-        self._format_x_ticks_as_dates(plot)
-        self._format_y_ticks_as_dollars(plot)
-        self._format_legend(plot, self._TEXT_COLOR)
+        plot_utils.format_x_ticks_as_dates(plot)
+        plot_utils.format_y_ticks_as_dollars(plot)
+        plot_utils.format_legend(plot, self._TEXT_COLOR)
         return plot
 
     def plot_profit_and_loss_lines(self):
@@ -228,8 +183,8 @@ class PortfolioReport(object):
         plot = profit_and_loss.plot(kind='line', ax=plt.gca())
         plot.set_title('Cumulative P&L | ${:,.2f}\n'.format(
             profit_and_loss[-1]), color=self._TEXT_COLOR)
-        self._format_x_ticks_as_dates(plot)
-        self._format_y_ticks_as_dollars(plot)
+        plot_utils.format_x_ticks_as_dates(plot)
+        plot_utils.format_y_ticks_as_dollars(plot)
         return plot
 
     def get_report(self):
