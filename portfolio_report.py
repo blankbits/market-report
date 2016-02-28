@@ -53,16 +53,12 @@ class PortfolioReport(object):
         self._config = portfolio_report_config
         self._daily = daily
 
-    def _get_percent_returns(self, offset=None):
-    # TODO: change to have cumulative flag and use .pct_change().shift().
-    # def _get_percent_returns(self, cumulative=False):
-        if offset is None:
-            # If no offset provided, get returns for entire period.
+    def _get_percent_returns(self, cumulative=False):
+        if cumulative is True:
             return self._daily['adj_close'] / (
                 self._daily['adj_close'].ix[0, :]) - 1.0
         else:
-            return self._daily['adj_close'].ix[-1, :] / (
-                self._daily['adj_close'].ix[-(offset + 1), :]) - 1.0
+            return self._daily['adj_close'].pct_change()
 
     def _get_dollar_values(self, group=False):
         dates = sorted(self._config['dates'])
@@ -85,20 +81,20 @@ class PortfolioReport(object):
                     dollar_values.ix[index, key] *= value * self._config[
                         'value_ratio']
 
-        # Optionally group using symbol_groups in config.
         if group is True:
-            group_dollar_values = pd.DataFrame()
-            for key, value in self._config['symbol_groups'].iteritems():
-                group_dollar_values[key] = dollar_values[value].sum(1)
-
-            dollar_values = group_dollar_values
-
-        return dollar_values
+            return self._sum_symbol_groups(dollar_values)
+        else:
+            return dollar_values
 
     def _get_dollar_returns(self, group=False):
-        # TODO: implement this.
-        dollar_values = self._get_dollar-values()
-        return None
+        dollar_values = self._get_dollar_values()
+        percent_returns = self._get_percent_returns()
+        dollar_returns = dollar_values * percent_returns
+
+        if group is True:
+            return self._sum_symbol_groups(dollar_returns)
+        else:
+            return dollar_returns
 
     def _get_profit_and_loss(self):
         profit_and_loss = self._get_dollar_values().sum(1)
@@ -118,6 +114,14 @@ class PortfolioReport(object):
                         'value_ratio']
 
         return profit_and_loss
+
+    def _sum_symbol_groups(self, data_frame):
+        # Sum columns of dataframe using symbol_groups in config.
+        sum_data_frame = pd.DataFrame()
+        for key, value in self._config['symbol_groups'].iteritems():
+            sum_data_frame[key] = data_frame[value].sum(1)
+
+        return sum_data_frame
 
     @staticmethod
     def _get_return_colors(returns):
@@ -173,35 +177,10 @@ class PortfolioReport(object):
         return plot
 
     def plot_dollar_change_bars(self, group=False):
-        percent_returns = self._get_percent_returns(1)
+        dollar_values = self._get_dollar_values(group).ix[-1, :]
+        dollar_returns = self._get_dollar_returns(group).ix[-1, :]
+        percent_returns = dollar_returns / dollar_values
 
-        # Use most recent portfolio from config.
-        portfolio = self._config['dates'][max(self._config['dates'], key=int)]
-
-        # Convert to dollar returns.
-        dollar_returns = percent_returns * self._config['value_ratio']
-        for i in dollar_returns.index:
-            dollar_returns[str(i)] *= self._daily['adj_close'].ix[
-                -2, str(i)] * (portfolio['symbols'][str(i)])
-
-        # Optionally group returns using symbol_groups in config.
-        if group is True:
-            group_dollar_returns = pd.Series()
-            group_percent_returns = pd.Series()
-            for key, value in self._config['symbol_groups'].iteritems():
-                group_dollar_returns[key] = dollar_returns[value].sum()
-                group_percent_returns[key] = 0.0
-                for symbol in value:
-                    group_percent_returns[key] += self._daily['adj_close'].ix[
-                        -2, symbol] * portfolio['symbols'][symbol]
-
-                group_percent_returns[key] = group_dollar_returns[key] / (
-                    group_percent_returns[key] * self._config['value_ratio'])
-
-            dollar_returns = group_dollar_returns
-            percent_returns = group_percent_returns
-
-        # Create plot.
         plot = dollar_returns.plot(kind='bar', color=self._get_return_colors(
             percent_returns))
         plot.set_title('1 Day Change | ${:,.2f}\n'.format(
@@ -212,9 +191,7 @@ class PortfolioReport(object):
         return plot
 
     def plot_percent_return_lines(self):
-        # percent_returns = self._daily['adj_close'] / (
-        #     self._daily['adj_close'].ix[0, :]) - 1.0
-        percent_returns = self._get_percent_returns()
+        percent_returns = self._get_percent_returns(True)
 
         plot = percent_returns.plot(kind='line', ax=plt.gca())
         plot.set_title('Change %\n', color=self._TEXT_COLOR)
