@@ -118,7 +118,7 @@ class PortfolioReport(object):
     def _sum_symbol_groups(self, data_frame):
         # Sum columns of dataframe using symbol_groups in config.
         sum_data_frame = pd.DataFrame()
-        for key, value in self._config['symbol_groups'].iteritems():
+        for key, value in sorted(self._config['symbol_groups'].iteritems()):
             sum_data_frame[key] = data_frame[value].sum(1)
 
         return sum_data_frame
@@ -136,8 +136,8 @@ class PortfolioReport(object):
 
     @staticmethod
     def _format_x_ticks_as_dates(plot):
-        plot.xaxis.set_major_formatter(mpl.dates.DateFormatter('%Y-%m-%d'))
-        plot.set_xlabel('')
+        #plot.xaxis.set_major_formatter(mpl.dates.DateFormatter('%Y-%m-%d'))
+        #plot.set_xlabel('')
         return plot
 
     @staticmethod
@@ -186,6 +186,7 @@ class PortfolioReport(object):
             percent_returns))
         plot.set_title('1-Day Change | ${:,.2f}\n'.format(
             np.sum(dollar_returns)), color=self._TEXT_COLOR)
+        plot.set_xticklabels(dollar_returns.index, rotation=0)
         self._format_y_ticks_as_dollars(plot)
         labels = ['{:3.1f}%'.format(x * 100.0) for x in percent_returns]
         self._add_bar_labels(plot, labels, self._TEXT_COLOR)
@@ -208,6 +209,7 @@ class PortfolioReport(object):
 
         plot = dollar_values.plot(kind='bar', alpha=.67)
         plot.set_title('Portfolio Weights', color=self._TEXT_COLOR)
+        plot.set_xticklabels(dollar_values.index, rotation=0)
         self._format_y_ticks_as_dollars(plot)
         labels = ['{:3.1f}%'.format(x * 100.0) for x in percents]
         self._add_bar_labels(plot, labels, self._TEXT_COLOR)
@@ -244,23 +246,21 @@ class PortfolioReport(object):
 
         plt.style.use(self._STYLE_SHEET)
         plt.figure()
-        self.plot_dollar_change_bars()
-        plt.figure()
         self.plot_dollar_change_bars(True)
         plt.figure()
-        self.plot_dollar_value_bars()
+        self.plot_dollar_change_bars()
         plt.figure()
         self.plot_dollar_value_bars(True)
         plt.figure()
-        self.plot_dollar_value_lines()
+        self.plot_dollar_value_bars()
         plt.figure()
         self.plot_dollar_value_lines(True)
         plt.figure()
-        self.plot_percent_return_lines()
+        self.plot_dollar_value_lines()
         plt.figure()
         self.plot_profit_and_loss_lines()
+        plt.figure()
+        self.plot_percent_return_lines()
         plt.show()
-
-        print self._config['symbol_groups']
 
         return {'subject': subject, 'body': body}
