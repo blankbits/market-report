@@ -41,6 +41,8 @@ class PortfolioReport(object):
     """
     _STYLE_SHEET = 'ggplot'
     _TEXT_COLOR = (.3, .3, .3, 1.0)
+    _BAR_ALPHA = .67
+    _TITLE_DOLLAR_FORMAT = '${:,.2f}'
 
     def __init__(self, portfolio_report_config, daily):
         """PortfolioReport must be initialized with args similar to those shown
@@ -64,6 +66,7 @@ class PortfolioReport(object):
 
     def _get_dollar_values(self, group=False):
         dates = sorted(self._config['dates'])
+
         # Copy dataframe and zero data before earliest portfolio date.
         dollar_values = self._daily['close'].copy()
         dollar_values.ix[
@@ -84,19 +87,16 @@ class PortfolioReport(object):
                         'value_ratio']
 
         if group is True:
-            return self._sum_symbol_groups(dollar_values)
-        else:
-            return dollar_values
+            dollar_values = self._sum_symbol_groups(dollar_values)
+        return dollar_values
 
     def _get_dollar_returns(self, group=False):
         dollar_values = self._get_dollar_values()
         percent_returns = self._get_percent_returns()
         dollar_returns = dollar_values * percent_returns
-
         if group is True:
-            return self._sum_symbol_groups(dollar_returns)
-        else:
-            return dollar_returns
+            dollar_returns = self._sum_symbol_groups(dollar_returns)
+        return dollar_returns
 
     def _get_profit_and_loss(self):
         profit_and_loss = self._get_dollar_values().sum(1)
@@ -122,56 +122,57 @@ class PortfolioReport(object):
         sum_data_frame = pd.DataFrame()
         for key, value in sorted(self._config['symbol_groups'].iteritems()):
             sum_data_frame[key] = data_frame[value].sum(1)
-
         return sum_data_frame
-
 
     def plot_dollar_change_bars(self, group=False):
         dollar_values = self._get_dollar_values(group).ix[-1, :]
         dollar_returns = self._get_dollar_returns(group).ix[-1, :]
         percent_returns = dollar_returns / dollar_values
-        #date_str = dollar_values.name.strftime('%Y-%m-%d')
+        labels = plot_utils.get_percent_strings(percent_returns)
+        bar_colors = plot_utils.get_conditional_colors(
+            percent_returns, self._BAR_ALPHA)
+        title = ('1-Day Change | ' + self._TITLE_DOLLAR_FORMAT + (
+            '\n')).format(np.sum(dollar_returns))
 
-        plot = dollar_returns.plot(kind='bar', color=(
-            plot_utils.get_conditional_colors(percent_returns, .67)))
-        plot.set_title('1-Day Change | ${:,.2f}\n'.format(
-            np.sum(dollar_returns)), color=self._TEXT_COLOR)
+        plot = dollar_returns.plot(kind='bar', color=bar_colors)
+        plot.set_title(title, color=self._TEXT_COLOR)
         plot.set_xticklabels(dollar_returns.index, rotation=0)
         plot_utils.format_y_ticks_as_dollars(plot)
-        labels = ['{:3.1f}%'.format(x * 100.0) for x in percent_returns]
         plot_utils.add_bar_labels(plot, labels, self._TEXT_COLOR)
         return plot
 
     def plot_percent_return_lines(self):
         percent_returns = self._get_percent_returns(True)
+        title = 'Symbol Returns\n'
 
         plot = percent_returns.plot(kind='line', ax=plt.gca())
-        plot.set_title('Symbol Returns\n', color=self._TEXT_COLOR)
+        plot.set_title(title, color=self._TEXT_COLOR)
         plot_utils.format_x_ticks_as_dates(plot)
         plot_utils.format_y_ticks_as_percents(plot)
         plot_utils.format_legend(plot, self._TEXT_COLOR)
-
         return plot
 
     def plot_dollar_value_bars(self, group=False):
         dollar_values = self._get_dollar_values(group).ix[-1, :]
         percents = dollar_values / np.sum(dollar_values)
+        labels = plot_utils.get_percent_strings(percents)
+        title = 'Portfolio Weights\n'
 
-        plot = dollar_values.plot(kind='bar', alpha=.67)
-        plot.set_title('Portfolio Weights\n', color=self._TEXT_COLOR)
+        plot = dollar_values.plot(kind='bar', alpha=self._BAR_ALPHA)
+        plot.set_title(title, color=self._TEXT_COLOR)
         plot.set_xticklabels(dollar_values.index, rotation=0)
         plot_utils.format_y_ticks_as_dollars(plot)
-        labels = ['{:3.1f}%'.format(x * 100.0) for x in percents]
         plot_utils.add_bar_labels(plot, labels, self._TEXT_COLOR)
         return plot
 
     def plot_dollar_value_lines(self, group=False):
         dollar_values = self._get_dollar_values(group)
         dollar_values['TOTAL'] = dollar_values.sum(1)
+        title = ('Portfolio Value | ' + self._TITLE_DOLLAR_FORMAT + (
+            '\n')).format(dollar_values['TOTAL'].ix[-1])
 
         plot = dollar_values.plot(kind='line', ax=plt.gca())
-        plot.set_title('Portfolio Value | ${:,.2f}\n'.format(
-            dollar_values['TOTAL'].ix[-1]), color=self._TEXT_COLOR)
+        plot.set_title(title, color=self._TEXT_COLOR)
         plot_utils.format_x_ticks_as_dates(plot)
         plot_utils.format_y_ticks_as_dollars(plot)
         plot_utils.format_legend(plot, self._TEXT_COLOR)
@@ -179,10 +180,11 @@ class PortfolioReport(object):
 
     def plot_profit_and_loss_lines(self):
         profit_and_loss = self._get_profit_and_loss()
+        title = ('Cumulative P&L | ' + self._TITLE_DOLLAR_FORMAT + (
+            '\n')).format(profit_and_loss[-1])
 
         plot = profit_and_loss.plot(kind='line', ax=plt.gca())
-        plot.set_title('Cumulative P&L | ${:,.2f}\n'.format(
-            profit_and_loss[-1]), color=self._TEXT_COLOR)
+        plot.set_title(title, color=self._TEXT_COLOR)
         plot_utils.format_x_ticks_as_dates(plot)
         plot_utils.format_y_ticks_as_dollars(plot)
         return plot

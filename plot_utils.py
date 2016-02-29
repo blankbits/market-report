@@ -23,8 +23,9 @@ def format_x_ticks_as_dates(plot):
 
 def format_y_ticks_as_percents(plot):
     y_ticks = plot.get_yticks()
-    plot.set_yticklabels([
-        '{:3.1f}%'.format(tick * 100.0) for tick in y_ticks])
+    # plot.set_yticklabels([
+    #     '{:3.1f}%'.format(tick * 100.0) for tick in y_ticks])
+    plot.set_yticklabels(get_percent_strings(y_ticks))
     return plot
 
 def format_y_ticks_as_dollars(plot):
@@ -36,7 +37,6 @@ def format_legend(plot, text_color):
     legend = plot.legend(loc='upper left', borderaxespad=0)
     for text in legend.get_texts():
         text.set_color(text_color)
-
     return plot
 
 def add_bar_labels(plot, labels, text_color):
@@ -47,6 +47,9 @@ def add_bar_labels(plot, labels, text_color):
         plot.text(rect.get_x() + rect.get_width() * .5, height, (
             label), ha='center', va=vert_align, color=text_color)
     return plot
+
+def get_percent_strings(values):
+    return ['{:3.1f}%'.format(x * 100.0) for x in values]
 
 def get_conditional_colors(values, alpha):
     # Color positive values green, negative values red, and adjust intensity by
