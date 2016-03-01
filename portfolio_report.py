@@ -29,7 +29,6 @@ Example:
     }, daily).get_report()
 """
 
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -58,6 +57,9 @@ class PortfolioReport(object):
         self._daily = daily
 
     def _get_percent_returns(self, cumulative=False):
+        """Calculate percent returns for the entire time period, either
+        cumulative from the beginning or separately for each day.
+        """
         if cumulative is True:
             return self._daily['adj_close'] / (
                 self._daily['adj_close'].ix[0, :]) - 1.0
@@ -65,6 +67,9 @@ class PortfolioReport(object):
             return self._daily['adj_close'].pct_change()
 
     def _get_dollar_values(self, group=False):
+        """Calculate the value of portfolio holdings using closing prices.
+        Optionally aggregate the values into groups provided in config.
+        """
         dates = sorted(self._config['dates'])
 
         # Copy dataframe and zero data before earliest portfolio date.
@@ -91,6 +96,9 @@ class PortfolioReport(object):
         return dollar_values
 
     def _get_dollar_returns(self, group=False):
+        """Calculate the dollar returns for portfolio holdings. Optionally
+        aggregate the returns into groups provided in config.
+        """
         dollar_values = self._get_dollar_values()
         percent_returns = self._get_percent_returns()
         dollar_returns = dollar_values * percent_returns
@@ -99,6 +107,8 @@ class PortfolioReport(object):
         return dollar_returns
 
     def _get_profit_and_loss(self):
+        """Calculate the profit and loss of the portfolio over time.
+        """
         profit_and_loss = self._get_dollar_values().sum(1)
         dates = sorted(self._config['dates'])
 
@@ -118,13 +128,19 @@ class PortfolioReport(object):
         return profit_and_loss
 
     def _sum_symbol_groups(self, data_frame):
-        # Sum columns of dataframe using symbol_groups in config.
+        """Sum columns of dataframe using symbol_groups in config.
+        """
         sum_data_frame = pd.DataFrame()
         for key, value in sorted(self._config['symbol_groups'].iteritems()):
             sum_data_frame[key] = data_frame[value].sum(1)
         return sum_data_frame
 
     def plot_dollar_change_bars(self, group=False):
+        """Plot the change in dollars for the most recent day as a bar plot.
+
+        Args:
+            group: Whether to aggregate based on symbol_groups in config.
+        """
         dollar_values = self._get_dollar_values(group).ix[-1, :]
         dollar_returns = self._get_dollar_returns(group).ix[-1, :]
         percent_returns = dollar_returns / dollar_values
@@ -142,6 +158,9 @@ class PortfolioReport(object):
         return plot
 
     def plot_percent_return_lines(self):
+        """Plot percent returns for each symbol for the entire time period as a
+        line plot.
+        """
         percent_returns = self._get_percent_returns(True)
         title = 'Symbol Returns\n'
 
@@ -153,6 +172,12 @@ class PortfolioReport(object):
         return plot
 
     def plot_dollar_value_bars(self, group=False):
+        """Plot the dollar value of portfolio holdings for the most recent day
+        as a bar plot.
+
+        Args:
+            group: Whether to aggregate based on symbol_groups in config.
+        """
         dollar_values = self._get_dollar_values(group).ix[-1, :]
         percents = dollar_values / np.sum(dollar_values)
         labels = plot_utils.get_percent_strings(percents)
@@ -166,6 +191,12 @@ class PortfolioReport(object):
         return plot
 
     def plot_dollar_value_lines(self, group=False):
+        """Plot the dollar value of portfolio holdings for the entire time
+        period as a line plot.
+
+        Args:
+            group: Whether to aggregate based on symbol_groups in config.
+        """
         dollar_values = self._get_dollar_values(group)
         dollar_values['TOTAL'] = dollar_values.sum(1)
         title = ('Portfolio Value | ' + self._TITLE_DOLLAR_FORMAT + (
@@ -179,6 +210,12 @@ class PortfolioReport(object):
         return plot
 
     def plot_profit_and_loss_lines(self):
+        """Plot the profit and loss of the portfolio for the entire time period
+        as a line plot.
+
+        Args:
+            group: Whether to aggregate based on symbol_groups in config.
+        """
         profit_and_loss = self._get_profit_and_loss()
         title = ('Cumulative P&L | ' + self._TITLE_DOLLAR_FORMAT + (
             '\n')).format(profit_and_loss[-1])
@@ -190,7 +227,7 @@ class PortfolioReport(object):
         return plot
 
     def get_report(self):
-        """Creates the entire report.
+        """Creates the entire report composed of individual plots.
         """
         subject = self._config['subject_format'] % str(
             self._daily['adj_close'].index[-1].date())

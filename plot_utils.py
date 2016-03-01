@@ -13,33 +13,65 @@
 # limitations under the License.
 # ==============================================================================
 
+"""
+Contains utility functions for generating plots with matplotlib.
+"""
+
 import matplotlib as mpl
 import numpy as np
 
 def format_x_ticks_as_dates(plot):
+    """Formats x ticks YYYY-MM-DD and removes the default 'Date' label.
+
+    Args:
+        plot: matplotlib.AxesSubplot object.
+    """
     plot.xaxis.set_major_formatter(mpl.dates.DateFormatter('%Y-%m-%d'))
     plot.get_xaxis().get_label().set_visible(False)
     return plot
 
 def format_y_ticks_as_percents(plot):
+    """Formats y ticks as nice-looking percents.
+
+    Args:
+        plot: matplotlib.AxesSubplot object.
+    """
     y_ticks = plot.get_yticks()
-    # plot.set_yticklabels([
-    #     '{:3.1f}%'.format(tick * 100.0) for tick in y_ticks])
     plot.set_yticklabels(get_percent_strings(y_ticks))
     return plot
 
 def format_y_ticks_as_dollars(plot):
+    """Formats y ticks as dollar values with commas and no decimals.
+
+    Args:
+        plot: matplotlib.AxesSubplot object.
+    """
     y_ticks = plot.get_yticks()
     plot.set_yticklabels(['${:,.0f}'.format(tick) for tick in y_ticks])
     return plot
 
 def format_legend(plot, text_color):
+    """Moves legend to the upper left of the plot area with no padding, and sets
+    the text color.
+
+    Args:
+        plot: matplotlib.AxesSubplot object.
+        text_color: matplotlib RGB color tuple.
+    """
     legend = plot.legend(loc='upper left', borderaxespad=0)
     for text in legend.get_texts():
         text.set_color(text_color)
     return plot
 
 def add_bar_labels(plot, labels, text_color):
+    """Draws text labels just above (below) bars in the plot for positive
+    (negative) values.
+
+    Args:
+        plot: matplotlib.AxesSubplot object.
+        labels: List of strings corresponding to bars in plot.
+        text_color: matplotlib RGB color tuple.
+    """
     rects = plot.patches
     for rect, label in zip(rects, labels):
         height = rect.get_height() * (-1.0 if rect.get_y() < 0 else 1.0)
@@ -49,11 +81,22 @@ def add_bar_labels(plot, labels, text_color):
     return plot
 
 def get_percent_strings(values):
+    """Formats floating point values as percent strings with one decimal place
+    e.g. '%99.9'.
+
+    Args:
+        values: List of floating point values.
+    """
     return ['{:3.1f}%'.format(x * 100.0) for x in values]
 
 def get_conditional_colors(values, alpha):
-    # Color positive values green, negative values red, and adjust intensity by
-    # relative magnitude.
+    """Generates colors with positive values green and negative values red.
+    Intensity varies by relative magnitude.
+
+    Args:
+        values: List of floating point values.
+        alpha: Degree of transparency in returned colors.
+    """
     max_abs_value = max(np.abs(values))
     colors = [(0.0, 0.0, 0.0, 0.0)] * len(values)
     for i, item in enumerate(values):
