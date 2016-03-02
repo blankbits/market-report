@@ -22,7 +22,6 @@ import io
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-import PIL
 
 def format_x_ticks_as_dates(plot):
     """Formats x ticks YYYY-MM-DD and removes the default 'Date' label.
@@ -97,12 +96,11 @@ def get_plot_image(plot_func, **kwargs):
     plot_func(**kwargs)
     plt.tight_layout()
 
-    # Convert to raw bytes in PNG format, then create new PIL.Image.
+    # Return image as raw bytes in PNG format.
     raw_bytes = io.BytesIO()
     plt.savefig(raw_bytes, format='png')
     raw_bytes.seek(0)
     return raw_bytes
-    #return PIL.Image.open(raw_bytes)
 
 def get_percent_strings(values):
     """Formats floating point values as percent strings with one decimal place
