@@ -17,8 +17,12 @@
 Contains utility functions for generating plots with matplotlib.
 """
 
+import io
+
 import matplotlib as mpl
+import matplotlib.pyplot as plt
 import numpy as np
+import PIL
 
 def format_x_ticks_as_dates(plot):
     """Formats x ticks YYYY-MM-DD and removes the default 'Date' label.
@@ -79,6 +83,26 @@ def add_bar_labels(plot, labels, text_color):
         plot.text(rect.get_x() + rect.get_width() * .5, height, (
             label), ha='center', va=vert_align, color=text_color)
     return plot
+
+def get_plot_image(plot_func, **kwargs):
+    """Calls the provided function to draw an arbitrary plot on a new figure and
+    returns an image of the resulting figure.
+
+    Args:
+        plot_func: Function which draws a plot on the matplotlib figure.
+        **kwargs: Arguments passed through to plot_func.
+    """
+    # Call plotting function to plot figure.
+    plt.figure()
+    plot_func(**kwargs)
+    plt.tight_layout()
+
+    # Convert to raw bytes in PNG format, then create new PIL.Image.
+    raw_bytes = io.BytesIO()
+    plt.savefig(raw_bytes, format='png')
+    raw_bytes.seek(0)
+    return raw_bytes
+    #return PIL.Image.open(raw_bytes)
 
 def get_percent_strings(values):
     """Formats floating point values as percent strings with one decimal place

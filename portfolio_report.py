@@ -32,6 +32,7 @@ Example:
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import PIL
 
 import plot_utils
 
@@ -42,6 +43,7 @@ class PortfolioReport(object):
     _TEXT_COLOR = (.3, .3, .3, 1.0)
     _BAR_ALPHA = .67
     _TITLE_DOLLAR_FORMAT = '${:,.2f}'
+    _REPORT_COLS = 2
 
     def __init__(self, portfolio_report_config, daily):
         """PortfolioReport must be initialized with args similar to those shown
@@ -226,6 +228,7 @@ class PortfolioReport(object):
         plot_utils.format_y_ticks_as_dollars(plot)
         return plot
 
+
     def get_report(self):
         """Creates the entire report composed of individual plots.
         """
@@ -234,30 +237,38 @@ class PortfolioReport(object):
         body = ''
 
         plt.style.use(self._STYLE_SHEET)
-        plt.figure()
-        self.plot_dollar_change_bars(True)
-        plt.tight_layout()
-        plt.figure()
-        self.plot_dollar_change_bars()
-        plt.tight_layout()
-        plt.figure()
-        self.plot_dollar_value_bars(True)
-        plt.tight_layout()
-        plt.figure()
-        self.plot_dollar_value_bars()
-        plt.tight_layout()
-        plt.figure()
-        self.plot_dollar_value_lines(True)
-        plt.tight_layout()
-        plt.figure()
-        self.plot_dollar_value_lines()
-        plt.tight_layout()
-        plt.figure()
-        self.plot_profit_and_loss_lines()
-        plt.tight_layout()
-        plt.figure()
-        self.plot_percent_return_lines()
-        plt.tight_layout()
-        plt.show()
+
+        # Create list of plot images to include in the report image.
+        plot_images = []
+        plot_images.append(plot_utils.get_plot_image(
+            self.plot_dollar_change_bars, group=True))
+        plot_images.append(plot_utils.get_plot_image(
+            self.plot_dollar_change_bars))
+        plot_images.append(plot_utils.get_plot_image(
+            self.plot_dollar_value_bars, group=True))
+        plot_images.append(plot_utils.get_plot_image(
+            self.plot_dollar_value_bars))
+        plot_images.append(plot_utils.get_plot_image(
+            self.plot_dollar_value_lines, group=True))
+        plot_images.append(plot_utils.get_plot_image(
+            self.plot_dollar_value_lines))
+        plot_images.append(plot_utils.get_plot_image(
+            self.plot_profit_and_loss_lines))
+        plot_images.append(plot_utils.get_plot_image(
+            self.plot_percent_return_lines))
+        plot_images = [PIL.Image.open(x) for x in plot_images]
+
+        # Arrange plot images in a grid in the report image.
+        plot_width = plot_images[0].size[0]
+        plot_height = plot_images[0].size[1]
+        report_image = PIL.Image.new('RGB', (
+            plot_width * self._REPORT_COLS, plot_height * int(
+                np.ceil(len(plot_images) / self._REPORT_COLS))), 'white')
+        for i, item in enumerate(plot_images):
+            report_image.paste(item, ((i % self._REPORT_COLS) * plot_width, int(
+                np.floor(i / self._REPORT_COLS)) * plot_height))
+
+        # Display report image to user.
+        report_image.show()
 
         return {'subject': subject, 'body': body}
