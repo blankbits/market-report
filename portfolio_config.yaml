@@ -38,14 +38,19 @@ logging_config:
 portfolio_report_config:
   subject_format: 'Portfolio Report -- %s'
   value_ratio: .1
+  symbol_groups:
+    Stocks: [VTI, VEU]
+    Bonds: [BND]
   dates:
     20160101:
       symbols:
         BND: 1000
-        VTI: 5000
+        VEU: 2000
+        VTI: 3000
       capital_change: 0
     20160201:
       symbols:
         BND: 1000
-        VTI: 5000
-      capital_change: 0
+        VEU: 2000
+        VTI: 3100
+      capital_change: 10000
