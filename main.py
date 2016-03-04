@@ -80,13 +80,16 @@ def main():
     if 'portfolio_report_config' in config:
         portfolio = portfolio_report.PortfolioReport(
             config['portfolio_report_config'], daily).get_report()
-        # sender = emailer.Emailer(config['emailer_config'])
-        # sender.send(portfolio['subject'], portfolio['body'])
+        sender = emailer.Emailer(config['emailer_config'])
+        sender.send(subject=portfolio['subject'],
+                    plain_body=portfolio['plain_body'],
+                    files=portfolio['files'])
     if 'universe_report_config' in config:
         universe = universe_report.UniverseReport(
             config['universe_report_config'], daily).get_report()
         sender = emailer.Emailer(config['emailer_config'])
-        sender.send(universe['subject'], universe['body'])
+        sender.send(subject=universe['subject'],
+                    plain_body=universe['plain_body'])
 
 # If in top-level script environment, run main().
 if __name__ == '__main__':

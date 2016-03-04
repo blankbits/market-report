@@ -29,6 +29,8 @@ Example:
     }, daily).get_report()
 """
 
+import io
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -39,6 +41,7 @@ import plot_utils
 class PortfolioReport(object):
     """Contains all functionality for the portfolio_report module.
     """
+    _FILENAME = 'report.png'
     _STYLE_SHEET = 'ggplot'
     _TEXT_COLOR = (.3, .3, .3, 1.0)
     _BAR_ALPHA = .67
@@ -234,7 +237,7 @@ class PortfolioReport(object):
         """
         subject = self._config['subject_format'] % str(
             self._daily['adj_close'].index[-1].date())
-        body = ''
+        plain_body = ''
 
         plt.style.use(self._STYLE_SHEET)
 
@@ -268,7 +271,11 @@ class PortfolioReport(object):
             report_image.paste(item, ((i % self._REPORT_COLS) * plot_width, int(
                 np.floor(i / self._REPORT_COLS)) * plot_height))
 
-        # Display report image to user.
-        report_image.show()
+        # Convert report image to bytes in PNG format.
+        report_image_bytes = io.BytesIO()
+        report_image.save(report_image_bytes, format='png')
+        report_image_bytes.seek(0)
 
-        return {'subject': subject, 'body': body}
+        return {'subject': subject,
+                'plain_body': plain_body,
+                'files': {self._FILENAME: report_image_bytes}}

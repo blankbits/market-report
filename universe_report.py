@@ -153,15 +153,15 @@ class UniverseReport(object):
         """
         subject = self._config['subject_format'] % str(
             self._daily['adj_close'].index[-1].date())
-        body = ''
+        plain_body = ''
         for key, value in self._config['body_returns'].iteritems():
-            body += '%s Day Returns\n' % str(key)
-            body += '-' * (12 + len(str(key))) + '\n'
-            body += self.get_returns_section(key, np.arange(
+            plain_body += '%s Day Returns\n' % str(key)
+            plain_body += '-' * (12 + len(str(key))) + '\n'
+            plain_body += self.get_returns_section(key, np.arange(
                 float(value['bins_start']), float(value['bins_stop']),
                 float(value['bins_step'])))
         for key, value in self._config['body_stats'].iteritems():
-            body += '%s Day Stats\n' % str(key)
-            body += '-' * (10 + len(str(key))) + '\n'
-            body += self.get_stats_section(key, value['count'])
-        return {'subject': subject, 'body': body}
+            plain_body += '%s Day Stats\n' % str(key)
+            plain_body += '-' * (10 + len(str(key))) + '\n'
+            plain_body += self.get_stats_section(key, value['count'])
+        return {'subject': subject, 'plain_body': plain_body}

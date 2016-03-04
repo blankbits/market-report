@@ -24,10 +24,12 @@ Example:
         'password': 'password123'
         'recipients': ['']
     })
-    sender.send('Hello', 'World', ['somebody@domain.com'])
+    sender.send(subject='Hello', plain_body='World',
+                recipients=['somebody@domain.com'])
 )
 """
 
+import email.mime.application
 import email.mime.multipart
 import email.mime.text
 import logging
@@ -49,7 +51,8 @@ class Emailer(object):
         self._logger = logging.getLogger(__name__)
 
     @staticmethod
-    def get_message_str(from_address, to_addresses, subject, body):
+    def get_message_str(from_address, to_addresses, subject, plain_body,
+                        html_body, files):
         """Creates a string containing a multipart email message with both plain
         text and monospaced HTML parts.
 
@@ -57,7 +60,9 @@ class Emailer(object):
             from_address: Email address of the sender.
             to_addresses: Comma-separated email addresses of recipients.
             subject: Subject line of the email.
-            body: Body of the email.
+            plain_body: Text body of the email.
+            html_body: HTML body of the email.
+            files: Dict keyed by filename of files to attach to the email.
         """
         # Create message container with MIME type multipart/alternative.
         message = email.mime.multipart.MIMEMultipart('alternative')
@@ -66,12 +71,14 @@ class Emailer(object):
         message['Subject'] = subject
 
         # Force CRLF line endings per SMTP spec.
-        plain_body = re.sub('\r?\n', '\r\n', body)
+        plain_body = re.sub('\r?\n', '\r\n', plain_body)
 
-        html_body = re.sub('\r?\n', '<br>', body)
-        html_body = html_body.replace(' ', '&nbsp;')
-        html_body = '<div dir="ltr"><font face="monospace, monospace">' + (
-            html_body + '</font></div>')
+        # If no HTML provided, create default HTML body from plain body.
+        if html_body is None:
+            html_body = re.sub('\r?\n', '<br>', plain_body)
+            html_body = html_body.replace(' ', '&nbsp;')
+            html_body = '<div dir="ltr"><font face="monospace, monospace">' + (
+                html_body + '</font></div>')
 
         # Record the MIME types of both parts - text/plain and text/html.
         plain_part = email.mime.text.MIMEText(plain_body, 'plain',
@@ -85,23 +92,36 @@ class Emailer(object):
         message.attach(plain_part)
         message.attach(html_part)
 
+        # Attach files.
+        if files is not None:
+            for key, value in files.iteritems():
+                message.attach(email.mime.application.MIMEApplication(
+                    value.read(),
+                    Content_Disposition=(
+                        'attachment; filename="{0}"'.format(key)),
+                    Name=key
+                ))
+
         return message.as_string()
 
-    def send(self, subject, body, recipients=None):
+    def send(self, subject, plain_body, html_body=None, files=None,
+             recipients=None):
         """Connects to the SMTP server and sends an email.
 
         Args:
             subject: Subject line of the email.
-            body: Body of the email.
+            plain_body: Text body of the email.
+            html_body: HTML body of the email.
+            files: Dict keyed by filename of files to attach to the email.
             recipients: List of email addresses to receive the email.
         """
         # Default to recipients in config if none provided.
         if recipients is None:
             recipients = self._config['recipients']
 
-        message_str = self.get_message_str(self._config['username'],
-                                           ', '.join(recipients),
-                                           subject, body)
+        message_str = self.get_message_str(
+            self._config['username'], ', '.join(recipients),
+            subject, plain_body, html_body, files)
 
         try:
             server = smtplib.SMTP_SSL(self._config['host'],
