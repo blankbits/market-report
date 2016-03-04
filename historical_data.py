@@ -144,8 +144,8 @@ class HistoricalData(object):
                 daily['adj_close'].isnull()):
             columns = daily['close'].columns[
                 daily['close'].isnull().any(axis=0)].values
-            columns.extend(daily['adj_close'].columns[
-                daily['adj_close'].isnull().any(axis=0)].values)
+            columns = np.concatenate((columns, daily['adj_close'].columns[
+                daily['adj_close'].isnull().any(axis=0)].values))
             drop_columns.extend(columns)
             self._logger.error('Price data contains nulls: ' +
                                ', '.join(columns))
