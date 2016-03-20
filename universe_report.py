@@ -24,7 +24,7 @@ Example:
     if daily is None:
         return
     print universe_report.UniverseReport({
-        'subject_format': 'Universe Report -- %s',
+        'subject_format': 'Universe Report -- {}',
         'body_returns': {
             1: {'bins_start': -.2, 'bins_stop': .22, 'bins_step': .02, },
             20: {'bins_start': -.5, 'bins_stop': .55, 'bins_step': .05, },
@@ -151,17 +151,17 @@ class UniverseReport(object):
         """Creates the entire report including returns and stats sections
         determined by the config.
         """
-        subject = self._config['subject_format'] % str(
-            self._daily['adj_close'].index[-1].date())
+        subject = self._config['subject_format'].format(str(
+            self._daily['adj_close'].index[-1].date()))
         plain_body = ''
         for key, value in self._config['body_returns'].iteritems():
-            plain_body += '%s Day Returns\n' % str(key)
+            plain_body += '{} Day Returns\n'.format(str(key))
             plain_body += '-' * (12 + len(str(key))) + '\n'
             plain_body += self.get_returns_section(key, np.arange(
                 float(value['bins_start']), float(value['bins_stop']),
                 float(value['bins_step'])))
         for key, value in self._config['body_stats'].iteritems():
-            plain_body += '%s Day Stats\n' % str(key)
+            plain_body += '{} Day Stats\n'.format(str(key))
             plain_body += '-' * (10 + len(str(key))) + '\n'
             plain_body += self.get_stats_section(key, value['count'])
         return {'subject': subject, 'plain_body': plain_body}

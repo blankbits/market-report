@@ -36,7 +36,7 @@ logging_config:
     handlers: [console]
 
 portfolio_report_config:
-  subject_format: 'Portfolio Report -- %s'
+  subject_format: 'Portfolio Report -- {}'
   value_ratio: .1
   symbol_groups:
     Stocks: [VTI, VEU]

@@ -36,7 +36,7 @@ logging_config:
     handlers: [console]
 
 universe_report_config:
-  subject_format: 'Universe Report -- %s'
+  subject_format: 'Universe Report -- {}'
   body_returns:
     1:
       bins_start: -.2

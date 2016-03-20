@@ -25,7 +25,7 @@ Example:
     if daily is None:
         return
     print portfolio_report.PortfolioReport({
-        'subject_format': 'Portfolio Report -- %s',
+        'subject_format': 'Portfolio Report -- {}',
     }, daily).get_report()
 """
 
@@ -235,8 +235,8 @@ class PortfolioReport(object):
     def get_report(self):
         """Creates the entire report composed of individual plots.
         """
-        subject = self._config['subject_format'] % str(
-            self._daily['adj_close'].index[-1].date())
+        subject = self._config['subject_format'].format(str(
+            self._daily['adj_close'].index[-1].date()))
         plain_body = ''
 
         plt.style.use(self._STYLE_SHEET)

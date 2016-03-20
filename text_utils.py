@@ -41,14 +41,17 @@ def get_histogram(series, bins, bins_decimals=0, bins_is_percent=False,
         (bins_decimals + 1) if bins_decimals > 0 else 0) + (
             1 if min(scaled_bins) < 0 else 0)
 
-    format_str = '  '.join(['%' + str(max_bin_value_len) + '.' + str(
-        bins_decimals) + ('f%%'if bins_is_percent else 'f')] * 2) + (
-            '  %-' + str(len(str(buckets.max()))) + 'i  %s\n')
+    format_str = '  '.join(['{:' + str(max_bin_value_len) + '.' + str(
+        bins_decimals) + ('f}%' if bins_is_percent else 'f}')] * 2) + (
+            '  {:<' + str(len(str(buckets.max()))) + '}  {}\n')
     for i in range(buckets.size):
         # Due to rounding exact number of blocks may vary.
-        histogram += format_str % (scaled_bins[i], (
-            scaled_bins[i + 1]), buckets[i], ''.join(
-                [u'\u2588'] * np.round(block_count * buckets[i] / series.size)))
+        histogram += format_str.format(
+            scaled_bins[i],
+            scaled_bins[i + 1],
+            buckets[i],
+            ''.join([u'\u2588'] * np.round(
+                block_count * buckets[i] / series.size)).encode('utf-8'))
     return histogram
 
 def get_column(series, decimals=1, is_percent=False):
@@ -67,12 +70,12 @@ def get_column(series, decimals=1, is_percent=False):
     scaled_series = 100 * series if is_percent else series
     label_len = len(max(list(scaled_series.axes[0]), key=len))
     value_len = len(str(max([str(x) for x in np.round(
-        list(abs(scaled_series.values)), decimals)], key=len))) + 1
+        list(abs(scaled_series.values)), decimals)], key=len)))
 
-    format_str = ('%-' + str(label_len) + 's  %' + str(value_len) + '.' +
-                  str(decimals) + 'f' + ('%%\n' if is_percent else '\n'))
+    format_str = ('{:<' + str(label_len) + '}  {:' + str(value_len) + '.' +
+                  str(decimals) + 'f}' + ('%\n' if is_percent else '\n'))
     for key, value in scaled_series.iteritems():
-        column += format_str % (key, value)
+        column += format_str.format(key, value)
     return column
 
 def join_lines(columns, separator=''):
@@ -92,7 +95,7 @@ def join_lines(columns, separator=''):
     result = ''
     for i in range(max([len(x) for x in split_columns])):
         for j, column in enumerate(split_columns):
-            result += ('%-' + str(widths[j] + len(separator)) + 's') % (
+            result += ('{:<' + str(widths[j] + len(separator)) + '}').format(
                 '' if i > len(column) - 1 else column[i])
 
         result += '\n'

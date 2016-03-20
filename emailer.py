@@ -98,7 +98,7 @@ class Emailer(object):
                 message.attach(email.mime.application.MIMEApplication(
                     value.read(),
                     Content_Disposition=(
-                        'attachment; filename="{0}"'.format(key)),
+                        'attachment; filename="{}"'.format(key)),
                     Name=key
                 ))
 

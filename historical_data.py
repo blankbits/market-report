@@ -207,10 +207,12 @@ class HistoricalData(object):
         start_date = start_date
         url = 'http://real-chart.finance.yahoo.com/table.csv?ignore=.csv'
         url += '&s=' + symbol_name
-        url += '&a=%s&b=%s&c=%s' % (int(start_date[4:6]) - 1, start_date[6:],
-                                    start_date[0:4])
+        url += '&a={}&b={}&c={}'.format(int(start_date[4:6]) - 1,
+                                        start_date[6:],
+                                        start_date[0:4])
         if end_date != None:
             end_date = end_date
-            url += '&d=%s&e=%s&f=%s' % (int(end_date[4:6]) - 1, end_date[6:],
-                                        end_date[0:4])
+            url += '&d={}&e={}&f={}'.format(int(end_date[4:6]) - 1,
+                                            end_date[6:],
+                                            end_date[0:4])
         return url
