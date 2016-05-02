@@ -50,8 +50,8 @@ def get_histogram(series, bins, bins_decimals=0, bins_is_percent=False,
             scaled_bins[i],
             scaled_bins[i + 1],
             buckets[i],
-            ''.join([u'\u2588'] * np.round(
-                block_count * buckets[i] / series.size)).encode('utf-8'))
+            ''.join(['*'] * np.round(
+                block_count * buckets[i] / series.size)))
     return histogram
 
 def get_column(series, decimals=1, is_percent=False):
