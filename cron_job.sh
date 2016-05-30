@@ -34,18 +34,21 @@ universe_cmd="./main.py --config_file universe_config_local.yaml
 eval "export PYTHONPATH=/Users/peter/Desktop/Code"
 eval "cd /Users/peter/Desktop/Code/market_report"
 
-counter=0
-while [ $counter -lt 5 ]; do  # Max 5 retries.
-  let counter=counter+1
-  echo "Attempt: ${counter}"
-  echo $portfolio_cmd
-  eval $portfolio_cmd
-  echo $universe_cmd
-  eval $universe_cmd
-  if [ $? -eq 0 ]; then
-    break
-  fi
+eval_with_retry() {
+  counter=0
+  while [ $counter -lt 5 ]; do  # Max 5 retries.
+    let counter=counter+1
+    echo "Attempt: ${counter}"
+    echo $1
+    eval $1
+    if [ $? -eq 0 ]; then
+      break
+    fi
 
-  eval "pkill tor.real"  # Kill any existing TOR processes.
-  sleep 10
-done
+    eval "pkill tor.real"  # Kill any existing TOR processes.
+    sleep 10
+  done
+}
+
+eval_with_retry "$portfolio_cmd"
+eval_with_retry "$universe_cmd"
