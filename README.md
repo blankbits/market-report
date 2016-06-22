@@ -7,13 +7,14 @@ MarketReport scrapes daily historical data about exchange-traded financial instr
 
 ## Dependencies
 Note: other environments will very likely work with no or minimal changes. But, this is what was used to develop MarketReport.
-* OS X 10.11.2
-* Python 2.7.10
+* Ubuntu Trusty 14.04
+* Python 2.7.6
 * Third party
-  * numpy 1.10.4
-  * pandas 0.17.1
-  * Pillow 3.1.1
-  * PyYAML 3.11
+  * Pillow 3.2.0
+  * PyYAML 3.10
+  * numpy 1.11.0
+  * matplotlib 1.5.1
+  * pandas 0.18.1
   * [tor\_scraper](https://github.com/peterbrandt84/tor_scraper)
 
 ## Usage

@@ -25,14 +25,14 @@ portfolio_cmd="./main.py --config_file portfolio_config_local.yaml
   --start_date ${portfolio_start_date}
   --end_date ${today}"
 
-universe_start_date=`/bin/date -v -56d +%Y%m%d`  # YYYYMMDD 8 weeks ago.
+universe_start_date=`/bin/date --date="8 weeks ago" +%Y%m%d`  # YYYYMMDD 8 weeks ago.
 universe_cmd="./main.py --config_file universe_config_local.yaml
   --output_dir universe_data/${today}/
   --start_date ${universe_start_date}
   --end_date ${today}"
 
-eval "export PYTHONPATH=/Users/peter/Desktop/Code"
-eval "cd /Users/peter/Desktop/Code/market_report"
+eval "export PYTHONPATH=/home/ubuntu/devel"
+eval "cd /home/ubuntu/devel/market_report"
 
 eval_with_retry() {
   counter=0
@@ -45,7 +45,7 @@ eval_with_retry() {
       break
     fi
 
-    eval "pkill tor.real"  # Kill any existing TOR processes.
+    eval "pkill tor"  # Kill any existing TOR processes.
     sleep 10
   done
 }
